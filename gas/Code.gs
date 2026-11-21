@@ -113,10 +113,11 @@ var ACTIONS = {
   board: function (r) {
     var a = viewer(r); if (a.error) return a.error;
     // 관리자 모드에서는 숨긴 글도 함께 보여 줘서 그 자리에서 다시 공개할 수 있게 한다
-    var me = a.admin ? '' : a.f.row[C.ID], bad = suspendedIds(), v = sheet(SHEET_R).getDataRange().getValues(), list = [];
+    var me = a.admin ? ADMIN_ID : a.f.row[C.ID], bad = suspendedIds(), v = sheet(SHEET_R).getDataRange().getValues(), list = [];
     for (var i = 1; i < v.length; i++) {
       var w = v[i], sh = w[R['공유']];
-      if (!(sh === '공유' || (a.admin && sh === '숨김')) || bad[w[R['사용자ID']]]) continue;
+      if (r.mine){ if (!me || w[R['사용자ID']] !== me) continue; } // '내 글' 탭: 내 기록 전부(비공개 포함)
+      else if (sh !== '공유' || bad[w[R['사용자ID']]]) continue;
       list.push({ i: i, t: +new Date(w[R['수정시각']] || w[R['저장시각']]) || 0, n: String(w[R['기록ID']]).indexOf(ADMIN_ID + '|P') === 0 }); // 공지 글쓰기로 올린 글만 공지(운영자의 일반 기록은 보통 글)
     }
     list.sort(function (x, y) { return (y.n - x.n) || (y.t - x.t); }); // 운영자 공지를 맨 위에 고정
