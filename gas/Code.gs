@@ -470,7 +470,7 @@ ACTIONS.recordPhotos = function (r) {
 
 /* 기록일 칸 읽기: 원래는 '2026-11-20 글자로 넣지만, 시트가 날짜로 바꿔 두었거나 화면용 표기(2026. 11. 20)로 읽혀도 같은 형식으로 맞춘다 */
 function dstr(v) {
-  if (v instanceof Date) return ymd(v);
+  if (v && typeof v.getTime === 'function') return ymd(v); // 시트의 날짜 값은 instanceof Date가 false로 나오는 경우가 있어 모양으로 판단
   var m = /(\d{4})\D+(\d{1,2})\D+(\d{1,2})/.exec(String(v));
   return m ? m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2) : String(v).replace(/^'/, '');
 }
