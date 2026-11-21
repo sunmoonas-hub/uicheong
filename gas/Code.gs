@@ -124,7 +124,7 @@ var ACTIONS = {
     var off = Math.max(0, parseInt(r.offset, 10) || 0), PAGE = 12;
     var items = list.slice(off, off + PAGE).map(function (o) {
       var w = v[o.i];
-      return { id: w[R['기록ID']], nickname: w[R['닉네임']], team: w[R['팀']], date: String(w[R['기록일']]).replace(/^'/, ''),
+      return { id: w[R['기록ID']], nickname: w[R['닉네임']], team: w[R['팀']], date: dstr(w[R['기록일']]),
         fills: w[R['채움활동']] ? String(w[R['채움활동']]).split(' | ') : [], practices: w[R['실천']] ? String(w[R['실천']]).split(' | ').length : 0,
         note: w[R['한줄기록']], thumbs: splitThumbs(w[R['썸네일']]), photos: splitIds(w[R['사진ID']]).length, mine: !!me && w[R['사용자ID']] === me, share: w[R['공유']], notice: o.n, at: o.t };
     });
@@ -174,7 +174,7 @@ function teamStats() {
   }
   var rec = sheet(SHEET_R).getDataRange().getValues();
   for (var j = 1; j < rec.length; j++) {
-    var w = rec[j], tm = uTeam[w[R['사용자ID']]], d = String(w[R['기록일']]).replace(/^'/, '');
+    var w = rec[j], tm = uTeam[w[R['사용자ID']]], d = dstr(w[R['기록일']]);
     if (!tm || d < p.start || d > last) continue;
     t[tm].records++; if (d === yest) t[tm].yesterday++;
   }
@@ -259,7 +259,7 @@ function findRecord(rid) {
 function userRecords(uid) {
   var v = sheet(SHEET_R).getDataRange().getDisplayValues(), outv = [];
   for (var i = 1; i < v.length; i++) if (v[i][R['사용자ID']] === uid && String(v[i][R['기록ID']]).indexOf('|P') < 0) outv.push({
-    date: v[i][R['기록일']], minutes: +v[i][R['사용시간(분)']] || 0,
+    date: dstr(v[i][R['기록일']]), minutes: +v[i][R['사용시간(분)']] || 0,
     practices: v[i][R['실천']] ? v[i][R['실천']].split(' | ') : [], fills: v[i][R['채움활동']] ? v[i][R['채움활동']].split(' | ') : [],
     note: v[i][R['한줄기록']], share: v[i][R['공유']] === '공유', photos: splitIds(v[i][R['사진ID']]).length
   });
@@ -330,7 +330,7 @@ ACTIONS.adminData = function (r) {
   var p = period(), yest = ymd(new Date(Date.now() - 864e5));
   var users = sheet(SHEET_P).getDataRange().getValues(), rec = sheet(SHEET_R).getDataRange().getValues(), cnt = {}, last = {}, yCount = 0, shared = 0, hidden = 0;
   for (var j = 1; j < rec.length; j++) {
-    var w = rec[j], uid = w[R['사용자ID']], d = String(w[R['기록일']]).replace(/^'/, '');
+    var w = rec[j], uid = w[R['사용자ID']], d = dstr(w[R['기록일']]);
     if (uid === ADMIN_ID) continue;
     if (d >= p.start && d <= p.end) { cnt[uid] = (cnt[uid] || 0) + 1; if (!last[uid] || d > last[uid]) last[uid] = d; if (d === yest) yCount++; }
     if (w[R['공유']] === '공유') shared++; else if (w[R['공유']] === '숨김') hidden++;
@@ -382,7 +382,7 @@ ACTIONS.adminPosts = function (r) {
   var off = Math.max(0, parseInt(r.offset, 10) || 0), PAGE = 20;
   return { ok: true, more: off + PAGE < list.length, items: list.slice(off, off + PAGE).map(function (o) {
     var w = v[o.i];
-    return { id: w[R['기록ID']], name: w[R['성명']], nickname: w[R['닉네임']], team: w[R['팀']], date: String(w[R['기록일']]).replace(/^'/, ''),
+    return { id: w[R['기록ID']], name: w[R['성명']], nickname: w[R['닉네임']], team: w[R['팀']], date: dstr(w[R['기록일']]),
       note: w[R['한줄기록']], thumb: splitThumbs(w[R['썸네일']])[0] || '', share: w[R['공유']], at: o.t };
   }) };
 };
@@ -467,3 +467,10 @@ ACTIONS.recordPhotos = function (r) {
   var ids = splitIds(f.row[R['사진ID']]), th = String(f.row[R['썸네일']] || '').split('|');
   return { ok: true, thumbs: ids.map(function (_, i) { return th[i] || ''; }) };
 };
+
+/* 기록일 칸 읽기: 원래는 '2026-11-20 글자로 넣지만, 시트가 날짜로 바꿔 두었거나 화면용 표기(2026. 11. 20)로 읽혀도 같은 형식으로 맞춘다 */
+function dstr(v) {
+  if (v instanceof Date) return ymd(v);
+  var m = /(\d{4})\D+(\d{1,2})\D+(\d{1,2})/.exec(String(v));
+  return m ? m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2) : String(v).replace(/^'/, '');
+}
