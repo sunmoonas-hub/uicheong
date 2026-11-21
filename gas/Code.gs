@@ -86,29 +86,20 @@ var ACTIONS = {
     if (fills.indexOf('못 했어요') >= 0) fills = ['못 했어요'];
     if (!fills.length) return { ok: false, field: 'fills', error: '줄인 시간을 채운 활동을 골라 주세요. 없으면 \'못 했어요\'를 고릅니다.' };
     var note = str(r.note, 100), share = r.share === true;
-    var thumb = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(r.thumb || '') && r.thumb.length < 45000 ? r.thumb : ''; // 시트 칸 한도(5만 자) 안쪽
 
     // 사진 파일 저장은 몇 초 걸릴 수 있어 잠금 밖에서 먼저 한다
-    var newPhoto = '';
-    if (r.photo) {
-      var m = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(r.photo);
-      if (!m || r.photo.length > 3000000) return { ok: false, error: '사진을 처리하지 못했습니다. 다른 사진으로 시도해 주세요.' };
-      var blob = Utilities.newBlob(Utilities.base64Decode(m[1]), 'image/jpeg', date + '_' + u[C['닉네임']] + '.jpg');
-      newPhoto = photoFolder().createFile(blob).getId();
-    }
+    var up = uploadPhotos(r.photos, date + '_' + u[C['닉네임']]);
+    if (up.error) return { ok: false, error: up.error };
 
     var lock = LockService.getScriptLock(); lock.waitLock(20000);
     try {
       var sh = sheet(SHEET_R), rid = uid + '|' + date, found = findRecord(rid), now = new Date();
       var row = found ? found.row.slice() : [];
-      var oldPhoto = found ? String(row[R['사진ID']] || '') : '';
-      if (oldPhoto && (newPhoto || r.removePhoto)) trashFile(oldPhoto); // 바꾸거나 지운 옛 사진은 휴지통으로
+      var merged = mergePhotos(found ? row : null, r.keep, up); // 남길 옛 사진 + 새 사진(최대 4장), 뺀 사진은 휴지통으로
       row[R['기록ID']] = rid; row[R['사용자ID']] = uid; row[R['성명']] = u[C['성명']]; row[R['닉네임']] = u[C['닉네임']]; row[R['팀']] = u[C['팀']];
       row[R['기록일']] = "'" + date; row[R['사용시간(분)']] = min; row[R['실천']] = prac.join(' | '); row[R['채움활동']] = fills.join(' | ');
       row[R['한줄기록']] = note; row[R['공유']] = share ? '공유' : '비공개';
-      if (newPhoto) { row[R['사진ID']] = newPhoto; row[R['썸네일']] = thumb; }
-      else if (r.removePhoto) { row[R['사진ID']] = ''; row[R['썸네일']] = ''; }
-      else if (!found) { row[R['사진ID']] = ''; row[R['썸네일']] = ''; }
+      row[R['사진ID']] = merged.ids.join(','); row[R['썸네일']] = merged.thumbs.join('|');
       if (!found) row[R['저장시각']] = now; row[R['수정시각']] = found ? now : '';
       for (var i = 0; i < RHEAD.length; i++) if (row[i] === undefined) row[i] = '';
       if (found) sh.getRange(found.index, 1, 1, RHEAD.length).setValues([row]); else sh.appendRow(row);
@@ -134,7 +125,7 @@ var ACTIONS = {
       var w = v[o.i];
       return { id: w[R['기록ID']], nickname: w[R['닉네임']], team: w[R['팀']], date: String(w[R['기록일']]).replace(/^'/, ''),
         fills: w[R['채움활동']] ? String(w[R['채움활동']]).split(' | ') : [], practices: w[R['실천']] ? String(w[R['실천']]).split(' | ').length : 0,
-        note: w[R['한줄기록']], thumb: w[R['썸네일']] || '', photo: !!w[R['사진ID']], mine: !!me && w[R['사용자ID']] === me, share: w[R['공유']], notice: o.n, at: o.t };
+        note: w[R['한줄기록']], thumbs: splitThumbs(w[R['썸네일']]), photos: splitIds(w[R['사진ID']]).length, mine: !!me && w[R['사용자ID']] === me, share: w[R['공유']], notice: o.n, at: o.t };
     });
     return { ok: true, items: items, more: off + PAGE < list.length, total: list.length };
   },
@@ -143,10 +134,11 @@ var ACTIONS = {
   photo: function (r) {
     var a = viewer(r); if (a.error) return a.error;
     var f = findRecord(String(r.id || ''));
-    if (!f || !f.row[R['사진ID']]) return { ok: false, error: '사진을 찾을 수 없습니다.' };
+    var ids = f ? splitIds(f.row[R['사진ID']]) : [], pid = ids[Math.max(0, parseInt(r.idx, 10) || 0)];
+    if (!pid) return { ok: false, error: '사진을 찾을 수 없습니다.' };
     if (!a.admin && f.row[R['공유']] !== '공유' && f.row[R['사용자ID']] !== a.f.row[C.ID]) return { ok: false, error: '볼 수 없는 사진입니다.' };
     try {
-      var b = DriveApp.getFileById(f.row[R['사진ID']]).getBlob();
+      var b = DriveApp.getFileById(pid).getBlob();
       return { ok: true, src: 'data:image/jpeg;base64,' + Utilities.base64Encode(b.getBytes()) };
     } catch (e) { return { ok: false, error: '사진을 불러오지 못했습니다.' }; }
   },
@@ -268,7 +260,7 @@ function userRecords(uid) {
   for (var i = 1; i < v.length; i++) if (v[i][R['사용자ID']] === uid && String(v[i][R['기록ID']]).indexOf('|P') < 0) outv.push({
     date: v[i][R['기록일']], minutes: +v[i][R['사용시간(분)']] || 0,
     practices: v[i][R['실천']] ? v[i][R['실천']].split(' | ') : [], fills: v[i][R['채움활동']] ? v[i][R['채움활동']].split(' | ') : [],
-    note: v[i][R['한줄기록']], share: v[i][R['공유']] === '공유', photo: !!v[i][R['사진ID']]
+    note: v[i][R['한줄기록']], share: v[i][R['공유']] === '공유', photos: splitIds(v[i][R['사진ID']]).length
   });
   return outv.sort(function (a, b) { return a.date < b.date ? -1 : 1; });
 }
@@ -390,7 +382,7 @@ ACTIONS.adminPosts = function (r) {
   return { ok: true, more: off + PAGE < list.length, items: list.slice(off, off + PAGE).map(function (o) {
     var w = v[o.i];
     return { id: w[R['기록ID']], name: w[R['성명']], nickname: w[R['닉네임']], team: w[R['팀']], date: String(w[R['기록일']]).replace(/^'/, ''),
-      note: w[R['한줄기록']], thumb: w[R['썸네일']] || '', share: w[R['공유']], at: o.t };
+      note: w[R['한줄기록']], thumb: splitThumbs(w[R['썸네일']])[0] || '', share: w[R['공유']], at: o.t };
   }) };
 };
 
@@ -427,18 +419,50 @@ function adminUser() {
 ACTIONS.adminPost = function (r) {
   if (!adminOk(r.atoken)) return DENY;
   var note = str(r.note, 300);
-  if (!note && !r.photo) return { ok: false, error: '내용이나 사진을 넣어 주세요.' };
-  var thumb = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(r.thumb || '') && r.thumb.length < 45000 ? r.thumb : '';
-  var photo = '';
-  if (r.photo) {
-    var m = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(r.photo);
-    if (!m || r.photo.length > 3000000) return { ok: false, error: '사진을 처리하지 못했습니다.' };
-    photo = photoFolder().createFile(Utilities.newBlob(Utilities.base64Decode(m[1]), 'image/jpeg', 'notice_' + Date.now() + '.jpg')).getId();
-  }
+  if (!note && !(r.photos && r.photos.length)) return { ok: false, error: '내용이나 사진을 넣어 주세요.' };
+  var up = uploadPhotos(r.photos, 'notice_' + Date.now());
+  if (up.error) return { ok: false, error: up.error };
   var f = adminUser(), now = new Date(), row = [];
   row[R['기록ID']] = ADMIN_ID + '|P' + now.getTime(); row[R['사용자ID']] = ADMIN_ID; row[R['성명']] = '운영자'; row[R['닉네임']] = f.row[C['닉네임']]; row[R['팀']] = '운영자';
   row[R['기록일']] = "'" + ymd(now); row[R['사용시간(분)']] = ''; row[R['실천']] = ''; row[R['채움활동']] = ''; row[R['한줄기록']] = note;
-  row[R['사진ID']] = photo; row[R['공유']] = '공유'; row[R['저장시각']] = now; row[R['수정시각']] = ''; row[R['썸네일']] = photo ? thumb : '';
+  row[R['사진ID']] = up.ids.join(','); row[R['공유']] = '공유'; row[R['저장시각']] = now; row[R['수정시각']] = ''; row[R['썸네일']] = up.thumbs.join('|');
   sheet(SHEET_R).appendRow(row);
   return { ok: true };
+};
+
+/* ===================== 사진 여러 장(최대 4장) =====================
+ * 사진ID 칸은 'id1,id2', 썸네일 칸은 'data:…|data:…'로 같은 순서로 둔다.
+ * 시트 한 칸은 5만 자까지라 썸네일 합계를 49,000자 안으로 묶는다(화면에서 장당 약 11KB로 줄여 보냄). */
+var MAX_PHOTOS = 4, THUMB_TOTAL = 49000;
+var JPEG = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/;
+function splitIds(v) { return String(v || '').split(',').filter(String); }
+function splitThumbs(v) { return String(v || '').split('|').filter(function (t) { return t.indexOf('data:image/jpeg;base64,') === 0; }); }
+function uploadPhotos(list, base) {
+  var ids = [], thumbs = [];
+  list = Array.isArray(list) ? list.slice(0, MAX_PHOTOS) : [];
+  for (var i = 0; i < list.length; i++) {
+    var m = JPEG.exec(list[i] && list[i].full || '');
+    if (!m || list[i].full.length > 3000000) { ids.forEach(trashFile); return { error: '사진을 처리하지 못했습니다. 다른 사진으로 시도해 주세요.' }; }
+    ids.push(photoFolder().createFile(Utilities.newBlob(Utilities.base64Decode(m[1]), 'image/jpeg', base + '_' + (i + 1) + '.jpg')).getId());
+    thumbs.push(JPEG.test(list[i].thumb || '') ? list[i].thumb : '');
+  }
+  return { ids: ids, thumbs: thumbs };
+}
+function mergePhotos(row, keep, up) {
+  var oldIds = row ? splitIds(row[R['사진ID']]) : [], oldTh = row ? String(row[R['썸네일']] || '').split('|') : [];
+  var keepIdx = Array.isArray(keep) ? keep.map(Number) : oldIds.map(function (_, i) { return i; }); // keep을 안 보내면 옛 사진은 그대로
+  var ids = [], thumbs = [];
+  oldIds.forEach(function (id, i) { if (keepIdx.indexOf(i) >= 0 && ids.length < MAX_PHOTOS) { ids.push(id); thumbs.push(oldTh[i] || ''); } else trashFile(id); });
+  up.ids.forEach(function (id, i) { if (ids.length < MAX_PHOTOS) { ids.push(id); thumbs.push(up.thumbs[i] || ''); } else trashFile(id); });
+  while (thumbs.join('|').length > THUMB_TOTAL) { var k = thumbs.lastIndexOf(thumbs.filter(String).pop()); if (k < 0) break; thumbs[k] = ''; } // 칸 한도를 넘으면 뒤에서부터 썸네일만 비운다(원본은 남음)
+  return { ids: ids, thumbs: thumbs };
+}
+
+/* 기록 수정 화면용: 내 기록의 썸네일을 그때만 받아 온다(평소 목록에는 싣지 않아 가볍게) */
+ACTIONS.recordPhotos = function (r) {
+  var a = active(r.token); if (a.error) return a.error;
+  var f = findRecord(a.f.row[C.ID] + '|' + String(r.date || ''));
+  if (!f) return { ok: true, thumbs: [] };
+  var ids = splitIds(f.row[R['사진ID']]), th = String(f.row[R['썸네일']] || '').split('|');
+  return { ok: true, thumbs: ids.map(function (_, i) { return th[i] || ''; }) };
 };

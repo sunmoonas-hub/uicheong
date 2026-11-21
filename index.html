@@ -222,6 +222,25 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 .photo-prev{position:relative;border-radius:var(--r-md);overflow:hidden;background:#000}
 .photo-prev img{width:100%;max-height:320px;object-fit:contain;margin:0 auto}
 .photo-prev button{position:absolute;top:10px;right:10px;border:0;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;padding:7px 12px;font-size:13px;cursor:pointer;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+/* 사진 여러 장: 2열 격자, 사진마다 ✕ 삭제 */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ptile{position:relative;aspect-ratio:1;border-radius:var(--r-md);overflow:hidden;background:var(--fill)}
+.ptile img{width:100%;height:100%;object-fit:cover}
+.ptile .px{position:absolute;top:6px;right:6px;width:32px;height:32px;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:15px;line-height:1;display:grid;place-items:center;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.ptile .pn{position:absolute;left:6px;bottom:6px;font-size:11px;font-weight:700;color:#fff;background:rgba(0,0,0,.5);border-radius:999px;padding:2px 7px}
+.padd{aspect-ratio:1;border-radius:var(--r-md);background:var(--fill);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--ink2);font-weight:600;cursor:pointer;font-size:14px}
+.padd b{font-size:26px;font-weight:400;line-height:1}
+.padd small{font-size:12px;color:var(--sub);font-weight:500}
+.btn.pclear{width:100%;min-height:44px;font-size:15px;margin-top:10px}
+.btn.pclear[hidden]{display:none}
+/* 게시판 사진: 1장은 넓게, 2장은 나란히, 3~4장은 2×2 */
+.post-imgs{display:grid;gap:4px;margin-top:12px;border-radius:var(--r-md);overflow:hidden}
+.post-imgs.n2,.post-imgs.n3,.post-imgs.n4{grid-template-columns:1fr 1fr}
+.post-imgs button{border:0;padding:0;background:var(--fill);cursor:zoom-in;display:block;aspect-ratio:1}
+.post-imgs.n1 button{aspect-ratio:auto}
+.post-imgs img{width:100%;height:100%;object-fit:cover;display:block}
+.post-imgs.n1 img{max-height:320px}
+.post-imgs.n3 button:first-child{grid-column:1/-1;aspect-ratio:2/1}
 .photo-note{font-size:13px;color:var(--sub);margin-top:10px}
 .photo-note:empty{display:none}
 #fRecord .agree{background:var(--fill);font-weight:500;font-size:15px}
@@ -528,13 +547,12 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
         <div class="count"><span id="rCount">0</span>/100</div>
       </div>
       <div class="card">
-        <h3>사진 (선택)</h3>
+        <h3>사진 (선택, 최대 4장)</h3>
         <p class="hint">책, 산책길, 운동, 함께한 순간 등. 사람 얼굴이 나오면 당사자 동의를 받아 주세요.</p>
-        <input type="file" id="rFile" accept="image/*" hidden>
-        <label class="photo-add" for="rFile" id="rAdd">📷 사진 고르기</label>
-        <div class="photo-prev" id="rPrev" hidden><img id="rImg" alt="첨부한 사진"><button type="button" id="rDel">사진 빼기</button></div>
+        <input type="file" id="rFile" accept="image/*" multiple hidden>
+        <div class="pgrid" id="rGrid"></div>
         <div class="photo-note" id="rPhotoNote"></div>
-        <button type="button" class="btn ghost" id="rDelOld" hidden style="margin:4px 0 0;padding:6px;font-size:14px;color:var(--red)">기존 사진 빼기</button>
+        <button type="button" class="btn danger pclear" id="rClear" hidden>사진 모두 삭제</button>
         <label class="agree" style="font-weight:600;font-size:14px"><input type="checkbox" id="rShare" checked> 한 줄 기록과 사진을 닉네임으로 게시판에 나눌게요.</label>
       </div>
       <div class="cta"><div class="formerr" id="recordErr"></div><button class="btn pri" id="btnSave" type="submit">기록 저장하기</button></div>
@@ -608,11 +626,11 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
         <div class="count"><span id="cCount">0</span>/300</div>
       </div>
       <div class="card">
-        <h3>사진 (선택)</h3>
-        <input type="file" id="cFile" accept="image/*" hidden>
-        <label class="photo-add" for="cFile" id="cAdd">📷 사진 고르기</label>
-        <div class="photo-prev" id="cPrev" hidden><img id="cImg" alt="첨부한 사진"><button type="button" id="cDel">사진 빼기</button></div>
+        <h3>사진 (선택, 최대 4장)</h3>
+        <input type="file" id="cFile" accept="image/*" multiple hidden>
+        <div class="pgrid" id="cGrid"></div>
         <div class="photo-note" id="cNoteMsg"></div>
+        <button type="button" class="btn danger pclear" id="cClear" hidden>사진 모두 삭제</button>
       </div>
       <div class="cta"><div class="formerr" id="composeErr"></div><button class="btn pri" id="btnPost" type="submit">게시판에 올리기</button></div>
     </form>
@@ -690,19 +708,21 @@ function demoApi(action, r){
     else if (r.date !== y) res = { ok:false, error:'어제 기록만 저장할 수 있습니다. 화면을 새로고침해 주세요.' };
     else {
       var list = recs[me.id] || [], old = list.filter(function(x){ return x.date === r.date; })[0];
-      var rec = { date: r.date, minutes: r.minutes, practices: r.practices, fills: r.fills, note: r.note, share: r.share, photo: r.photo ? true : r.removePhoto ? false : !!(old && old.photo), thumb: r.photo ? r.thumb : r.removePhoto ? '' : (old && old.thumb) || '', at: Date.now() };
+      var rec = { date: r.date, minutes: r.minutes, practices: r.practices, fills: r.fills, note: r.note, share: r.share, thumbs: (old && old.thumbs || []).filter(function(_, i){ return !r.keep || r.keep.indexOf(i) >= 0; }).concat((r.photos || []).map(function(x){ return x.thumb; })).slice(0, 4), at: Date.now() };
+      rec.photos = rec.thumbs.length;
       list = list.filter(function(x){ return x.date !== r.date; }).concat([rec]).sort(function(a, b){ return a.date < b.date ? -1 : 1; });
       recs[me.id] = list; save('pfDemoRecs', recs); // 데모는 사진 원본을 저장하지 않는다
       res = { ok:true, edited: !!old, records: list };
     }
   }
+  else if (action === 'recordPhotos'){ var mine2 = ((load('pfDemoRecs') || {})[r.token] || []).filter(function(x){ return x.date === r.date; })[0]; res = { ok:true, thumbs: mine2 && mine2.thumbs || [] }; }
   else if (action === 'demoSuspend'){ users.forEach(function(u){ if (u.id === r.token) u.status = '정지'; }); save('pfDemoUsers', users); res = { ok:true }; }
   else if (action === 'board' || action === 'teams' || action === 'photo'){
     // 데모: 이 브라우저의 기록 + 화면을 채워 보는 예시 동료들
     var all = demoPeople(users), y = fmt(new Date(today() - DAY)), p = per();
     if (action === 'board'){
       var posts = [];
-      all.forEach(function(u){ (u.recs || []).forEach(function(x){ if (x.share) posts.push({ id: u.id + '|' + x.date, nickname: u.nickname, team: u.team, date: x.date, fills: x.fills, practices: (x.practices || []).length, note: x.note, thumb: x.thumb || '', photo: !!x.photo || !!x.thumb, mine: u.id === r.token, at: x.at || +ymd(x.date) + 9 * 36e5 }); }); });
+      all.forEach(function(u){ (u.recs || []).forEach(function(x){ if (x.share) posts.push({ id: u.id + '|' + x.date, nickname: u.nickname, team: u.team, date: x.date, fills: x.fills, practices: (x.practices || []).length, note: x.note, thumbs: x.thumbs || [], photos: (x.thumbs || []).length, mine: u.id === r.token, at: x.at || +ymd(x.date) + 9 * 36e5 }); }); });
       posts.sort(function(a, b){ return b.at - a.at; });
       var off = +r.offset || 0; res = { ok:true, items: posts.slice(off, off + 12), more: off + 12 < posts.length, total: posts.length };
     } else if (action === 'teams'){
@@ -713,7 +733,7 @@ function demoApi(action, r){
       res = { ok:true, days: days, teams: list, myTeam: me2 && me2.team };
     } else {
       var hit = null; all.forEach(function(u){ (u.recs || []).forEach(function(x){ if (u.id + '|' + x.date === r.id) hit = x; }); });
-      res = hit && hit.thumb ? { ok:true, src: hit.thumb } : { ok:false, error:'데모에서는 사진 원본을 저장하지 않아 크게 볼 수 없어요.' };
+      res = hit && hit.thumbs && hit.thumbs[r.idx || 0] ? { ok:true, src: hit.thumbs[r.idx || 0] } : { ok:false, error:'데모에서는 사진 원본을 저장하지 않아 크게 볼 수 없어요.' };
     }
   }
   return new Promise(function(ok){ setTimeout(function(){ ok(res || { ok:false, error:'알 수 없는 요청' }); }, 450); }); // 실제 서버처럼 잠깐 기다린다
@@ -726,7 +746,14 @@ function drop(k){ try { localStorage.removeItem(k); } catch(e){} }
 
 /* ---------- 화면 전환 ---------- */
 var TABS = ['home', 'board', 'rank', 'admin'];
-function show(name){
+/* 화면 이동을 브라우저 기록에 남겨, 휴대폰의 뒤로(취소) 버튼이 앱을 끄지 않고 전 화면으로 가게 한다.
+ * opt.pop: 뒤로 가기로 온 경우(기록을 건드리지 않음), opt.replace: 지금 기록을 바꿔치기(로그인 직후 등) */
+var CUR = null, ROOT_AT = 0;
+function nav(st, replace){ if (replace) history.replaceState(st, ''); else history.pushState(st, ''); CUR = st; }
+function show(name, opt){
+  opt = opt || {};
+  if (!opt.pop && name !== 'boot' && !(CUR && CUR.s === name && !CUR.step)) nav({ s: name }, opt.replace);
+  if (opt.pop) CUR = history.state;
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.toggle('on', s.id === 's-' + name); });
   window.scrollTo(0, 0);
   if (name === 'signup') goStep(0);
@@ -740,7 +767,8 @@ function show(name){
   if (name === 'admin') loadAdmin();
 }
 document.addEventListener('click', function(e){
-  var go = e.target.closest('[data-go]'); if (go){ show(go.getAttribute('data-go')); return; }
+  var go = e.target.closest('[data-go]');
+  if (go){ if (go.classList.contains('back') && history.state && history.state.s !== 'root') history.back(); else show(go.getAttribute('data-go')); return; } // 화면 위 ‹ 버튼도 휴대폰 뒤로와 같게
   var eye = e.target.closest('[data-eye]');
   if (eye){ var inp = $(eye.getAttribute('data-eye')); var hidden = inp.type === 'password'; inp.type = hidden ? 'text' : 'password'; eye.textContent = hidden ? '숨기기' : '보기'; }
 });
@@ -787,7 +815,8 @@ function validate(ids){
   if (first){ var el = $(first); el.focus && el.focus({ preventScroll: true }); }
   return !first;
 }
-function goStep(n){
+function goStep(n, fromPop){
+  if (!fromPop && n > 0 && step !== n) nav({ s: 'signup', step: n });
   step = n;
   document.querySelectorAll('#fSignup .step').forEach(function(c, i){ c.classList.toggle('cur', i === n); });
   $('sBar').style.width = ((n + 1) / STEPS.length * 100) + '%';
@@ -800,7 +829,7 @@ function goStep(n){
   if (f && f.tagName === 'INPUT') setTimeout(function(){ f.focus({ preventScroll: true }); }, 250);
 }
 function stepOf(field){ for (var i = 0; i < STEPS.length; i++) if (STEPS[i].indexOf(field) >= 0) return i; return -1; }
-$('sBack').onclick = function(){ if (step > 0) goStep(step - 1); else show('welcome'); };
+$('sBack').onclick = function(){ history.back(); };
 function formData(){
   return {
     code: $('code').value.trim(), name: $('name').value.trim(), team: $('team').value, position: $('position').value,
@@ -853,7 +882,7 @@ $('fSignup').addEventListener('submit', function(e){
     }
     drop(SKEY); setMe(r, r.token);
     $('fSignup').reset(); nickOkFor = ''; checkPw();
-    home(); toast('회원가입을 마쳤어요');
+    home({ replace: true }); toast('회원가입을 마쳤어요');
   });
 });
 
@@ -865,7 +894,7 @@ $('fLogin').addEventListener('submit', function(e){
   var btn = $('btnLogin'); busy(btn, true, '로그인 중…');
   api('login', { nickname: n, password: p }).then(function(r){
     busy(btn, false);
-    if (r.ok){ drop(SKEY); setMe(r, r.token); $('lPw').value = ''; home(); return; }
+    if (r.ok){ drop(SKEY); setMe(r, r.token); $('lPw').value = ''; home({ replace: true }); return; }
     if (r.code === 'SUSPENDED') return blocked(r.error);
     $('loginErr').textContent = r.error;
   });
@@ -894,7 +923,7 @@ function setMe(r, token){
   if (r.period) s.period = ME.period = r.period;
   save(SKEY, s);
 }
-function home(){
+function home(opt){
   var u = ME.user;
   $('hHello').innerHTML = esc(u.nickname) + '님' + (u.admin ? '<span class="op-mode">운영자</span>' : '');
   $('hTeam').textContent = u.team;
@@ -925,7 +954,7 @@ function home(){
   if (tg){ var done = !!recOf(tg); b.disabled = false; b.textContent = md(tg) + ' 기록' + (done ? ' 수정하기' : '하기'); b.className = 'btn recbtn ' + (done ? 'sec' : 'pri'); }
   else { b.disabled = true; b.className = 'btn pri recbtn'; b.textContent = t <= st ? md(fmt(new Date(st.getTime() + DAY))) + '부터 기록할 수 있어요' : '기록 기간이 끝났어요'; }
   $('btnDemoSuspend').hidden = !DEMO;
-  show('home');
+  show('home', opt);
 }
 function hm(m){ var h = Math.floor(m / 60), r = m % 60; return (h ? h + '시간 ' : '') + (r || !h ? r + '분' : ''); }
 
@@ -937,8 +966,64 @@ var PRACTICES = [ // Code.gs의 PRACTICES와 글자까지 같아야 한다
 ];
 var FILLS = [{ v: 'R 독서', l: 'R', t: '독서' }, { v: 'A 예술·문화', l: 'A', t: '예술·문화' }, { v: 'S 스포츠', l: 'S', t: '스포츠' }, { v: '함께', l: '🤝', t: '함께 (동료·가족 등)' }];
 var NONE = '못 했어요';
-var photo = null; // { full, thumb } 새로 고른 사진. removePhoto는 기존 사진을 빼는 경우
-var removePhoto = false, editing = null;
+var editing = null;
+/* 사진 고르기(최대 4장): 기록하기와 공지 글쓰기가 함께 쓴다.
+ * items: { old:true, idx, thumb } 이미 올린 사진 / { full, thumb } 새로 고른 사진 */
+var MAXP = 4;
+function Picker(grid, file, clear, note){
+  var P = { items: [] };
+  P.render = function(){
+    grid.innerHTML = '';
+    P.items.forEach(function(it, i){
+      var t = document.createElement('div'); t.className = 'ptile';
+      t.innerHTML = '<img alt="첨부한 사진 ' + (i + 1) + '"><span class="pn">' + (i + 1) + '</span><button type="button" class="px" aria-label="사진 ' + (i + 1) + ' 삭제">✕</button>';
+      t.querySelector('img').src = it.thumb || it.full;
+      t.querySelector('.px').onclick = function(){ P.items.splice(i, 1); P.render(); };
+      grid.appendChild(t);
+    });
+    if (P.items.length < MAXP){
+      var a = document.createElement('label'); a.className = 'padd'; a.htmlFor = file.id;
+      a.innerHTML = '<b>＋</b>사진 추가<small>' + P.items.length + '/' + MAXP + '</small>';
+      grid.appendChild(a);
+    }
+    clear.hidden = !P.items.length;
+  };
+  P.reset = function(list){ P.items = list || []; note.textContent = ''; P.render(); };
+  P.payload = function(){
+    return { keep: P.items.filter(function(x){ return x.old; }).map(function(x){ return x.idx; }),
+             photos: P.items.filter(function(x){ return !x.old; }).map(function(x){ return { full: x.full, thumb: x.thumb }; }) };
+  };
+  file.addEventListener('change', function(){
+    var files = [].slice.call(this.files || []); this.value = '';
+    var room = MAXP - P.items.length;
+    if (!files.length) return;
+    if (files.length > room) toast('사진은 ' + MAXP + '장까지 올릴 수 있어요.');
+    files = files.slice(0, room);
+    note.textContent = '사진을 준비하는 중…';
+    var next = function(){
+      if (!files.length){ note.textContent = ''; P.render(); return; }
+      var f = files.shift(), url = URL.createObjectURL(f), img = new Image();
+      img.onload = function(){
+        try {
+          // 시트 한 칸(5만 자)에 썸네일 4장이 들어가도록 장당 약 11KB 이하로 줄인다
+          var full = shrink(img, 1280, .8), th = shrink(img, 260, .6);
+          if (th.length > 11000) th = shrink(img, 220, .5);
+          if (th.length > 11500) th = shrink(img, 180, .45);
+          P.items.push({ full: full, thumb: th });
+        } catch (e){ toast('처리하지 못한 사진이 있어요.'); }
+        URL.revokeObjectURL(url); P.render(); next();
+      };
+      img.onerror = function(){ URL.revokeObjectURL(url); toast('열 수 없는 사진이 있어요. 카메라 설정을 \'호환성 우선(JPG)\'으로 해 주세요.'); next(); };
+      img.src = url;
+    };
+    next();
+  });
+  clear.onclick = function(){
+    ask('사진을 모두 삭제할까요?', '고른 사진 ' + P.items.length + '장이 모두 빠져요. 저장해야 반영돼요.', '모두 삭제', true).then(function(yes){ if (yes){ P.items = []; P.render(); } });
+  };
+  P.render();
+  return P;
+}
 
 function optEl(cls, val, html, on){
   var lab = document.createElement('label'); lab.className = cls + (on ? ' on' : '');
@@ -948,7 +1033,7 @@ function optEl(cls, val, html, on){
 }
 function openRecord(){
   var tg = target(); if (!tg) return;
-  editing = recOf(tg) || null; photo = null; removePhoto = false;
+  editing = recOf(tg) || null;
   $('rTitle').textContent = md(tg) + ' 기록';
   $('recordErr').textContent = ''; msg('rH', ''); msg('rFills', '');
   var m = editing ? editing.minutes : null;
@@ -962,18 +1047,18 @@ function openRecord(){
   fl.appendChild(optEl('tile none', NONE, '<span class="t">어제는 채운 활동이 없어요</span>', editing && editing.fills.indexOf(NONE) >= 0));
   $('rNote').value = editing ? editing.note : ''; $('rCount').textContent = $('rNote').value.length;
   $('rShare').checked = editing ? editing.share : true;
-  showPhoto(null);
-  $('rPhotoNote').textContent = editing && editing.photo ? '이미 올린 사진이 있어요. 새로 고르면 바뀌고, 그대로 두면 유지됩니다.' : '';
-  $('rDelOld').hidden = !(editing && editing.photo);
+  rPick.reset([]);
+  if (editing && editing.photos){ // 이미 올린 사진은 수정할 때만 서버에서 썸네일을 받아 온다
+    $('rPhotoNote').textContent = '올린 사진을 불러오는 중…';
+    api('recordPhotos', { token: tok(), date: tg }).then(function(r){
+      if (!r.ok) return $('rPhotoNote').textContent = '올린 사진을 불러오지 못했어요. 그대로 저장하면 사진은 유지돼요.';
+      rPick.reset(r.thumbs.map(function(t, i){ return { old: true, idx: i, thumb: t }; }));
+    });
+  }
   $('btnSave').textContent = editing ? '기록 수정하기' : '기록 저장하기';
   show('record');
 }
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
-function showPhoto(src){
-  $('rPrev').hidden = !src; $('rAdd').hidden = !!src;
-  if (src){ $('rImg').src = src; $('rDel').textContent = '사진 빼기'; }
-  if (!src && editing && editing.photo && !removePhoto){ $('rAdd').textContent = '📷 사진 바꾸기'; } else $('rAdd').textContent = '📷 사진 고르기';
-}
 $('btnRecord').onclick = openRecord;
 // '채운 활동이 없어요'와 다른 활동은 함께 고를 수 없다
 $('rFills').addEventListener('change', function(e){
@@ -982,7 +1067,6 @@ $('rFills').addEventListener('change', function(e){
   this.querySelectorAll('input').forEach(function(i){ if ((isNone && i.value !== NONE) || (!isNone && i.value === NONE)){ i.checked = false; i.parentNode.classList.remove('on'); } });
   msg('rFills', '');
 });
-$('rDelOld').onclick = function(){ removePhoto = true; photo = null; this.hidden = true; showPhoto(null); $('rPhotoNote').textContent = '저장하면 기존 사진이 빠집니다.'; };
 $('rNote').addEventListener('input', function(){ $('rCount').textContent = this.value.length; });
 ['rH','rM'].forEach(function(id){ $(id).addEventListener('input', function(){ this.value = this.value.replace(/\D/g, ''); msg('rH', ''); }); });
 
@@ -994,25 +1078,7 @@ function shrink(img, max, q){
   var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
   return c.toDataURL('image/jpeg', q);
 }
-$('rFile').addEventListener('change', function(){
-  var f = this.files && this.files[0]; this.value = '';
-  if (!f) return;
-  if (!/^image\//.test(f.type) && !/\.(heic|heif)$/i.test(f.name)) return toast('사진 파일만 올릴 수 있어요.');
-  $('rPhotoNote').textContent = '사진을 준비하는 중…';
-  var url = URL.createObjectURL(f), img = new Image();
-  img.onload = function(){
-    try {
-      var full = shrink(img, 1280, .8), thumb = shrink(img, 360, .6);
-      if (thumb.length > 44000) thumb = shrink(img, 300, .5); // 시트 칸에 들어가도록
-      photo = { full: full, thumb: thumb }; removePhoto = false; showPhoto(full);
-      $('rPhotoNote').textContent = '사진 준비 완료 (' + Math.round(full.length * .75 / 1024) + 'KB)';
-    } catch (e){ $('rPhotoNote').textContent = '이 사진은 처리하지 못했어요. 다른 사진을 골라 주세요.'; }
-    URL.revokeObjectURL(url);
-  };
-  img.onerror = function(){ URL.revokeObjectURL(url); $('rPhotoNote').textContent = '이 형식의 사진은 열 수 없어요. 카메라 설정을 \'호환성 우선(JPG)\'으로 하거나 다른 사진을 골라 주세요.'; };
-  img.src = url;
-});
-$('rDel').onclick = function(){ photo = null; showPhoto(null); $('rPhotoNote').textContent = editing && editing.photo && !removePhoto ? '이미 올린 사진이 유지됩니다.' : ''; };
+var rPick = Picker($('rGrid'), $('rFile'), $('rClear'), $('rPhotoNote'));
 
 $('fRecord').addEventListener('submit', function(e){
   e.preventDefault(); $('recordErr').textContent = '';
@@ -1026,8 +1092,8 @@ $('fRecord').addEventListener('submit', function(e){
   var fills = pick('rFills');
   if (!fills.length){ msg('rFills', '하나 이상 골라 주세요. 없었다면 \'채운 활동이 없어요\'를 고릅니다.'); return $('rFills').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
   var data = { token: (load(SKEY) || {}).token, date: tg, minutes: mins, practices: pick('rPractices'), fills: fills, note: $('rNote').value.trim(), share: $('rShare').checked };
-  if (photo){ data.photo = photo.full; data.thumb = photo.thumb; } else if (removePhoto) data.removePhoto = true;
-  var btn = $('btnSave'); busy(btn, true, photo ? '사진과 함께 저장하는 중…' : '저장하는 중…');
+  var pp = rPick.payload(); data.photos = pp.photos; if (editing) data.keep = pp.keep;
+  var btn = $('btnSave'); busy(btn, true, pp.photos.length ? '사진 ' + pp.photos.length + '장과 함께 저장하는 중…' : '저장하는 중…');
   api('saveRecord', data).then(function(r){
     busy(btn, false);
     if (!r.ok){
@@ -1044,7 +1110,7 @@ function saved(edited, mins){
   $('svDays').textContent = '기록 ' + n + '일째';
   $('svText').textContent = n >= 10 ? '10일을 채웠어요. 마무리 설문까지 참여하면 완수입니다.' : '꽃이 피기까지 ' + (10 - n) + '번 남았어요. 어제는 ' + hm(mins) + ' 썼어요.';
   $('svSvg').innerHTML = sprout(n, !edited); // 새 기록일 때만 새 잎이 돋는 움직임
-  home(); show('saved');
+  home({ replace: true }); show('saved'); // 기록 화면 자리를 홈으로 바꿔, 완료 화면에서 뒤로 가면 홈이 나오게
 }
 
 /* 새싹 그림: 기록 1번에 줄기가 한 마디 자라고 잎이 하나 돋는다. 10번이면 꼭대기에 꽃.
@@ -1069,7 +1135,7 @@ function sprout(n, animate){
   return s;
 }
 function blocked(m){ drop(SKEY); $('blockedMsg').textContent = m || '운영자 확인이 필요한 계정입니다.'; show('blocked'); }
-$('btnLogout').onclick = function(){ drop(SKEY); setAtok(''); show('welcome'); toast('로그아웃했습니다.'); };
+$('btnLogout').onclick = function(){ drop(SKEY); setAtok(''); show('welcome', { replace: true }); toast('로그아웃했습니다.'); };
 $('btnBlockedOut').onclick = function(){ show('welcome'); };
 /* ---------- 하단 탭 ---------- */
 document.querySelectorAll('.tabbar button').forEach(function(b){ b.onclick = function(){ if (b.dataset.tab === 'home') home(); else show(b.dataset.tab); }; });
@@ -1112,10 +1178,17 @@ function postEl(it){
   el.innerHTML =
     '<div class="post-h"><span class="ava">' + esc(String(it.nickname).charAt(0)) + '</span><div><b>' + esc(it.nickname) + (it.notice ? '<span class="op">운영자</span>' : '') + '</b><small>' + (it.notice ? '공지 · ' + ago(it.at) : esc(it.team) + ' · ' + md(it.date) + ' 기록') + '</small></div>' + (it.mine ? '<span class="me">나</span>' : '') + '</div>' +
     (it.note ? '<p class="post-note"></p>' : '') +
-    (it.thumb ? '<button type="button" class="post-img" aria-label="사진 크게 보기"><img alt="' + esc(it.nickname) + '님이 올린 사진" loading="lazy"></button>' : '') +
+    (it.thumbs && it.thumbs.length ? '<div class="post-imgs n' + Math.min(4, it.thumbs.length) + '"></div>' : '') +
     (tags ? '<div class="post-tags">' + tags + '</div>' : '');
   if (it.note) el.querySelector('.post-note').textContent = it.note;
-  if (it.thumb){ el.querySelector('.post-img img').src = it.thumb; el.querySelector('.post-img').onclick = function(){ openViewer(it); }; }
+  if (it.thumbs && it.thumbs.length){
+    var box = el.querySelector('.post-imgs');
+    it.thumbs.slice(0, 4).forEach(function(t, i){
+      var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', '사진 ' + (i + 1) + ' 크게 보기');
+      b.innerHTML = '<img alt="' + esc(it.nickname) + '님이 올린 사진 ' + (i + 1) + '" loading="lazy">'; b.firstChild.src = t;
+      b.onclick = function(){ openViewer(it, i); }; box.appendChild(b);
+    });
+  }
   if (isAdmin()) adminPostBar(el, it);
   return el;
 }
@@ -1139,15 +1212,32 @@ $('btnMore').onclick = function(){ loadBoard(false); };
 
 /* 사진 크게 보기: 썸네일을 먼저 띄우고, 원본은 서버에서 받아 바꿔 끼운다 */
 var viewerFor = null;
-function openViewer(it){
-  viewerFor = it.id; $('viewerImg').src = it.thumb; $('viewerMsg').textContent = it.photo ? '원본을 불러오는 중…' : ''; $('viewer').hidden = false; $('viewerX').focus();
-  if (!it.photo) return;
-  api('photo', { token: tok(), atoken: atok(), id: it.id }).then(function(r){
-    if (viewerFor !== it.id || $('viewer').hidden) return;
+function openViewer(it, i){
+  i = i || 0; var key = it.id + '#' + i;
+  viewerFor = key; $('viewerImg').src = it.thumbs[i]; $('viewerMsg').textContent = it.photos > i ? '원본을 불러오는 중…' : ''; $('viewer').hidden = false; $('viewerX').focus();
+  if (!(it.photos > i)) return;
+  api('photo', { token: tok(), atoken: atok(), id: it.id, idx: i }).then(function(r){
+    if (viewerFor !== key || $('viewer').hidden) return;
     if (r.ok){ $('viewerImg').src = r.src; $('viewerMsg').textContent = ''; } else $('viewerMsg').textContent = r.error;
   });
 }
 function closeViewer(){ $('viewer').hidden = true; viewerFor = null; }
+window.addEventListener('popstate', function(e){
+  // 사진 크게 보기·확인 창이 떠 있으면 그 창만 닫고 화면은 그대로
+  if (!$('viewer').hidden || !$('modal').hidden){ if (!$('viewer').hidden) closeViewer(); else $('mNo').click(); history.pushState(CUR, ''); return; }
+  var st = e.state;
+  if (!st || st.s === 'root'){ // 첫 화면에서 한 번 더 누르면 종료
+    if (Date.now() - ROOT_AT < 2000){ history.back(); return; }
+    ROOT_AT = Date.now(); toast('한 번 더 누르면 앱이 닫혀요'); history.pushState(CUR, ''); return;
+  }
+  var s = st.s, inApp = !!(ME.user && tok());
+  if (inApp && /^(welcome|login|signup|adminlogin|blocked)$/.test(s)){ history.back(); return; } // 로그인한 뒤에는 가입·로그인 화면을 건너뛴다
+  if (!inApp && /^(home|board|rank|record|saved|compose|admin)$/.test(s)){ history.back(); return; }
+  if (s === 'saved' || (s === 'record' && !target())) s = 'home';
+  if (s === 'compose' && !isAdmin()) s = 'board';
+  if (s === 'signup'){ show('signup', { pop: true }); goStep(st.step || 0, true); return; }
+  if (s === 'home') home({ pop: true }); else show(s, { pop: true });
+});
 $('viewerX').onclick = closeViewer;
 $('viewer').addEventListener('click', function(e){ if (e.target === this) closeViewer(); });
 document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !$('viewer').hidden) closeViewer(); });
@@ -1189,7 +1279,7 @@ function demoPeople(users){
     var list = [];
     for (var d = ymd(p.start), n = 0; fmt(d) <= y && fmt(d) <= p.end; d = new Date(d.getTime() + DAY), n++){
       if (((n * 7 + k * 3) % 10) / 10 >= s[2]) continue; // 사람마다 다른 빈도로 빠지는 날
-      list.push({ date: fmt(d), practices: [1, 2], fills: fills[(n + k) % 7], note: notes[(n + k) % 7], share: (n + k) % 3 !== 2, thumb: (n + k) % 4 === 0 ? demoThumb(fills[(n + k) % 7][0]) : '', at: d.getTime() + DAY + (9 + k) * 36e5 });
+      list.push({ date: fmt(d), practices: [1, 2], fills: fills[(n + k) % 7], note: notes[(n + k) % 7], share: (n + k) % 3 !== 2, thumbs: (n + k) % 4 === 0 ? [demoThumb(fills[(n + k) % 7][0])].concat((n + k) % 8 === 0 ? [demoThumb('R 독서'), demoThumb('함께')] : []) : [], at: d.getTime() + DAY + (9 + k) * 36e5 });
     }
     out.push({ id: 'S' + k, nickname: s[0], team: T[s[1]] || '팀', recs: list });
   });
@@ -1227,7 +1317,7 @@ $('fAdmin').addEventListener('submit', function(e){
   api('adminLogin', { password: pw }).then(function(r){
     busy(btn, false);
     if (!r.ok){ $('adminErr').textContent = r.error; return; }
-    $('aPw').value = ''; setAtok(r.atoken); drop(SKEY); setMe(r, r.token); home(); toast('운영자(의청이)로 들어왔어요');
+    $('aPw').value = ''; setAtok(r.atoken); drop(SKEY); setMe(r, r.token); home({ replace: true }); toast('운영자(의청이)로 들어왔어요');
   });
 });
 $('btnAdminOut').onclick = function(){ setAtok(''); AD = null; show('welcome'); toast('관리자 모드에서 나왔어요'); };
@@ -1288,33 +1378,26 @@ $('aCsv').onclick = function(){
 };
 
 /* ---------- 공지 글쓰기(운영자) ---------- */
-var cPhoto = null;
-$('btnCompose').onclick = function(){ $('cNote').value = ''; $('cCount').textContent = 0; cPhoto = null; $('cPrev').hidden = true; $('cAdd').hidden = false; $('cNoteMsg').textContent = ''; $('composeErr').textContent = ''; show('compose'); };
+var cPick = Picker($('cGrid'), $('cFile'), $('cClear'), $('cNoteMsg'));
+$('btnCompose').onclick = function(){ $('cNote').value = ''; $('cCount').textContent = 0; cPick.reset([]); $('composeErr').textContent = ''; show('compose'); };
 $('cNote').addEventListener('input', function(){ $('cCount').textContent = this.value.length; });
-$('cFile').addEventListener('change', function(){
-  var f = this.files && this.files[0]; this.value = ''; if (!f) return;
-  $('cNoteMsg').textContent = '사진을 준비하는 중…';
-  var url = URL.createObjectURL(f), img = new Image();
-  img.onload = function(){ try { var full = shrink(img, 1280, .8), th = shrink(img, 360, .6); if (th.length > 44000) th = shrink(img, 300, .5); cPhoto = { full: full, thumb: th }; $('cImg').src = full; $('cPrev').hidden = false; $('cAdd').hidden = true; $('cNoteMsg').textContent = ''; } catch(e){ $('cNoteMsg').textContent = '이 사진은 처리하지 못했어요.'; } URL.revokeObjectURL(url); };
-  img.onerror = function(){ URL.revokeObjectURL(url); $('cNoteMsg').textContent = '이 형식의 사진은 열 수 없어요.'; };
-  img.src = url;
-});
-$('cDel').onclick = function(){ cPhoto = null; $('cPrev').hidden = true; $('cAdd').hidden = false; };
 $('fCompose').addEventListener('submit', function(e){
   e.preventDefault(); $('composeErr').textContent = '';
   var note = $('cNote').value.trim();
-  if (!note && !cPhoto){ $('composeErr').textContent = '내용이나 사진을 넣어 주세요.'; return; }
-  var data = { atoken: atok(), note: note }; if (cPhoto){ data.photo = cPhoto.full; data.thumb = cPhoto.thumb; }
+  var pp = cPick.payload();
+  if (!note && !pp.photos.length){ $('composeErr').textContent = '내용이나 사진을 넣어 주세요.'; return; }
+  var data = { atoken: atok(), note: note, photos: pp.photos };
   var btn = $('btnPost'); busy(btn, true, '올리는 중…');
   api('adminPost', data).then(function(r){
     busy(btn, false);
     if (!r.ok){ if (!authFail(r)) $('composeErr').textContent = r.error; return; }
-    show('board'); toast('공지를 올렸어요');
+    history.back(); toast('공지를 올렸어요'); // 글쓰기 화면을 닫고 게시판으로(게시판은 다시 불러옴)
   });
 });
 
 /* ---------- 시작: 저장된 로그인이 있으면 서버에서 정지 여부를 다시 확인 ---------- */
 function start(){
+  history.replaceState({ s: 'root' }, ''); CUR = history.state; // 맨 아래에 '앱 시작' 자리를 깔아 둔다
   var s = load(SKEY);
   if (s && s.user && s.user.admin && !isAdmin()){ drop(SKEY); s = null; } // 운영자 로그인은 탭을 닫으면 끝난다
   if (!s || !s.token){ show('welcome'); return; }
