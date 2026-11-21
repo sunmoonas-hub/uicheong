@@ -327,6 +327,11 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 .mini.done{background:#FFF3D6;color:#8A5A00}
 .btn.danger{background:var(--red-soft);color:var(--red)}
 .post.hid{opacity:.55}
+/* 운영자 공지: 맨 위 고정, 연한 초록 면으로 일반 글과 구분 */
+.post.notice{background:var(--brand-soft)}
+.post.notice .ava{background:var(--brand);color:#fff}
+.post .op{margin-left:6px;font-size:11px;font-weight:700;color:#fff;background:var(--brand);border-radius:999px;padding:2px 8px;vertical-align:2px}
+.op-mode{display:inline-block;margin-left:6px;font-size:12px;font-weight:600;color:#fff;background:var(--ink2);border-radius:999px;padding:2px 9px;vertical-align:3px}
 .post-admin{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
 .post-admin .btn{width:auto;min-height:36px;font-size:14px;margin:0;padding:0 14px}
 .modal{position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}
@@ -543,6 +548,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
   <section class="screen tabbed" id="s-board">
     <h1 class="page-title">게시판</h1>
     <p class="page-sub">동료들이 폰을 내려놓고 채운 시간이에요.</p>
+    <button class="btn pri" id="btnCompose" hidden style="margin-bottom:12px">공지 글쓰기</button>
     <div id="feed"></div>
     <div class="feed-empty" id="feedEmpty" hidden>
       <p><b>아직 올라온 글이 없어요</b>기록할 때 '게시판에 나눌게요'를 켜 두면 여기에 보여요.</p>
@@ -556,7 +562,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
     <form id="fAdmin" novalidate>
       <h3 class="big-title">관리자 비밀번호를
 입력해 주세요</h3>
-      <p class="hint">로그인하면 게시판과 팀 참여율을 보면서 참가자 관리, 글 숨기기, 완수자 명단 내려받기를 할 수 있어요.</p>
+      <p class="hint">운영자 계정 '의청이'로 참가자와 같은 화면을 둘러보고, 기록을 남겨 보고, 게시판에 공지를 올릴 수 있어요. 운영자 기록은 팀 참여율에 들어가지 않아요.</p>
       <div class="pw"><input class="in" id="aPw" type="password" maxlength="64" placeholder="관리자 비밀번호" autocomplete="current-password" style="background:var(--surface)"><button type="button" class="eye" data-eye="aPw">보기</button></div>
       <div class="formerr" id="adminErr"></div>
       <div class="cta"><button class="btn pri" id="btnAdmin" type="submit">관리자 모드로 들어가기</button></div>
@@ -581,6 +587,27 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
       <div id="aDone"></div>
     </div>
     <button class="btn ghost" id="btnAdminOut">관리자 모드 나가기</button>
+  </section>
+
+  <!-- 공지 글쓰기 (운영자만) -->
+  <section class="screen" id="s-compose">
+    <div class="head"><button class="back" data-go="board" aria-label="뒤로">‹</button><h2>공지 글쓰기</h2></div>
+    <form id="fCompose" novalidate>
+      <div class="card">
+        <h3>내용</h3>
+        <p class="hint">게시판 맨 위에 '운영자' 표시와 함께 고정돼요.</p>
+        <textarea class="in" id="cNote" maxlength="300" placeholder="예: 내일부터 기록이 열려요! 오늘 하루 폰을 내려놓은 시간을 떠올려 보세요." style="min-height:140px"></textarea>
+        <div class="count"><span id="cCount">0</span>/300</div>
+      </div>
+      <div class="card">
+        <h3>사진 (선택)</h3>
+        <input type="file" id="cFile" accept="image/*" hidden>
+        <label class="photo-add" for="cFile" id="cAdd">📷 사진 고르기</label>
+        <div class="photo-prev" id="cPrev" hidden><img id="cImg" alt="첨부한 사진"><button type="button" id="cDel">사진 빼기</button></div>
+        <div class="photo-note" id="cNoteMsg"></div>
+      </div>
+      <div class="cta"><div class="formerr" id="composeErr"></div><button class="btn pri" id="btnPost" type="submit">게시판에 올리기</button></div>
+    </form>
   </section>
 
   <!-- 팀 참여율 -->
@@ -698,7 +725,8 @@ function show(name){
   var tabbed = TABS.indexOf(name) >= 0; $('tabbar').hidden = !tabbed;
   document.querySelectorAll('.tabbar button').forEach(function(b){ if (b.dataset.tab === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   // 관리자 모드에서는 개인 기록이 없으니 홈 대신 관리 탭
-  document.querySelector('.tabbar [data-tab=home]').hidden = isAdmin(); document.querySelector('.tabbar [data-tab=admin]').hidden = !isAdmin();
+  document.querySelector('.tabbar [data-tab=admin]').hidden = true; // 운영자도 참가자와 같은 탭을 쓴다(참가자 관리는 admin.html)
+  $('btnCompose').hidden = !isAdmin();
   if (name === 'board') loadBoard(true);
   if (name === 'rank') loadRank();
   if (name === 'admin') loadAdmin();
@@ -848,7 +876,7 @@ function today(){
 }
 function per(){ return ME.period || { start: CFG.START, end: CFG.END }; }
 /* 기록할 날 = 어제. 어제가 챌린지 기간 밖이면 null */
-function target(){ var y = fmt(new Date(today() - DAY)), p = per(); return y >= p.start && y <= p.end ? y : null; }
+function target(){ var y = fmt(new Date(today() - DAY)), p = per(); return (ME.user && ME.user.admin) || (y >= p.start && y <= p.end) ? y : null; }
 function recOf(date){ return ME.records.filter(function(r){ return r.date === date; })[0]; }
 function setMe(r, token){
   var s = load(SKEY) || {};
@@ -860,7 +888,7 @@ function setMe(r, token){
 }
 function home(){
   var u = ME.user;
-  $('hHello').textContent = u.nickname + '님';
+  $('hHello').innerHTML = esc(u.nickname) + '님' + (u.admin ? '<span class="op-mode">운영자</span>' : '');
   $('hTeam').textContent = u.team;
   var box = $('hPledges'); box.innerHTML = '';
   (u.pledges || []).forEach(function(p, i){ var d = document.createElement('div'); d.className = 'pledge'; d.innerHTML = '<b>' + (i + 1) + '</b><span></span>'; d.lastChild.textContent = p; box.appendChild(d); });
@@ -1033,7 +1061,7 @@ function sprout(n, animate){
   return s;
 }
 function blocked(m){ drop(SKEY); $('blockedMsg').textContent = m || '운영자 확인이 필요한 계정입니다.'; show('blocked'); }
-$('btnLogout').onclick = function(){ drop(SKEY); show('welcome'); toast('로그아웃했습니다.'); };
+$('btnLogout').onclick = function(){ drop(SKEY); setAtok(''); show('welcome'); toast('로그아웃했습니다.'); };
 $('btnBlockedOut').onclick = function(){ show('welcome'); };
 /* ---------- 하단 탭 ---------- */
 document.querySelectorAll('.tabbar button').forEach(function(b){ b.onclick = function(){ if (b.dataset.tab === 'home') home(); else show(b.dataset.tab); }; });
@@ -1070,11 +1098,11 @@ function loadBoard(reset){
   });
 }
 function postEl(it){
-  var el = document.createElement('article'); el.className = 'post';
+  var el = document.createElement('article'); el.className = 'post' + (it.notice ? ' notice' : '');
   var tags = (it.fills || []).filter(function(f){ return f !== NONE; }).map(function(f){ return '<span>' + esc(f) + '</span>'; }).join('');
   if (it.practices) tags += '<span>실천 ' + it.practices + '개</span>';
   el.innerHTML =
-    '<div class="post-h"><span class="ava">' + esc(String(it.nickname).charAt(0)) + '</span><div><b>' + esc(it.nickname) + '</b><small>' + esc(it.team) + ' · ' + md(it.date) + ' 기록</small></div>' + (it.mine ? '<span class="me">나</span>' : '') + '</div>' +
+    '<div class="post-h"><span class="ava">' + esc(String(it.nickname).charAt(0)) + '</span><div><b>' + esc(it.nickname) + (it.notice ? '<span class="op">운영자</span>' : '') + '</b><small>' + (it.notice ? '공지 · ' + ago(it.at) : esc(it.team) + ' · ' + md(it.date) + ' 기록') + '</small></div>' + (it.mine ? '<span class="me">나</span>' : '') + '</div>' +
     (it.note ? '<p class="post-note"></p>' : '') +
     (it.thumb ? '<button type="button" class="post-img" aria-label="사진 크게 보기"><img alt="' + esc(it.nickname) + '님이 올린 사진" loading="lazy"></button>' : '') +
     (tags ? '<div class="post-tags">' + tags + '</div>' : '');
@@ -1191,7 +1219,7 @@ $('fAdmin').addEventListener('submit', function(e){
   api('adminLogin', { password: pw }).then(function(r){
     busy(btn, false);
     if (!r.ok){ $('adminErr').textContent = r.error; return; }
-    $('aPw').value = ''; setAtok(r.atoken); ME.user = null; show('admin'); toast('관리자 모드로 들어왔어요');
+    $('aPw').value = ''; setAtok(r.atoken); drop(SKEY); setMe(r, r.token); home(); toast('운영자(의청이)로 들어왔어요');
   });
 });
 $('btnAdminOut').onclick = function(){ setAtok(''); AD = null; show('welcome'); toast('관리자 모드에서 나왔어요'); };
@@ -1251,10 +1279,36 @@ $('aCsv').onclick = function(){
   a.download = '폰프리청챌린지_완수자_' + fmt(new Date()) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
 };
 
+/* ---------- 공지 글쓰기(운영자) ---------- */
+var cPhoto = null;
+$('btnCompose').onclick = function(){ $('cNote').value = ''; $('cCount').textContent = 0; cPhoto = null; $('cPrev').hidden = true; $('cAdd').hidden = false; $('cNoteMsg').textContent = ''; $('composeErr').textContent = ''; show('compose'); };
+$('cNote').addEventListener('input', function(){ $('cCount').textContent = this.value.length; });
+$('cFile').addEventListener('change', function(){
+  var f = this.files && this.files[0]; this.value = ''; if (!f) return;
+  $('cNoteMsg').textContent = '사진을 준비하는 중…';
+  var url = URL.createObjectURL(f), img = new Image();
+  img.onload = function(){ try { var full = shrink(img, 1280, .8), th = shrink(img, 360, .6); if (th.length > 44000) th = shrink(img, 300, .5); cPhoto = { full: full, thumb: th }; $('cImg').src = full; $('cPrev').hidden = false; $('cAdd').hidden = true; $('cNoteMsg').textContent = ''; } catch(e){ $('cNoteMsg').textContent = '이 사진은 처리하지 못했어요.'; } URL.revokeObjectURL(url); };
+  img.onerror = function(){ URL.revokeObjectURL(url); $('cNoteMsg').textContent = '이 형식의 사진은 열 수 없어요.'; };
+  img.src = url;
+});
+$('cDel').onclick = function(){ cPhoto = null; $('cPrev').hidden = true; $('cAdd').hidden = false; };
+$('fCompose').addEventListener('submit', function(e){
+  e.preventDefault(); $('composeErr').textContent = '';
+  var note = $('cNote').value.trim();
+  if (!note && !cPhoto){ $('composeErr').textContent = '내용이나 사진을 넣어 주세요.'; return; }
+  var data = { atoken: atok(), note: note }; if (cPhoto){ data.photo = cPhoto.full; data.thumb = cPhoto.thumb; }
+  var btn = $('btnPost'); busy(btn, true, '올리는 중…');
+  api('adminPost', data).then(function(r){
+    busy(btn, false);
+    if (!r.ok){ if (!authFail(r)) $('composeErr').textContent = r.error; return; }
+    show('board'); toast('공지를 올렸어요');
+  });
+});
+
 /* ---------- 시작: 저장된 로그인이 있으면 서버에서 정지 여부를 다시 확인 ---------- */
 function start(){
-  if (isAdmin() && !DEMO){ ME.user = null; show('admin'); return; } // 관리자 모드가 켜져 있으면 그대로 이어서
   var s = load(SKEY);
+  if (s && s.user && s.user.admin && !isAdmin()){ drop(SKEY); s = null; } // 운영자 로그인은 탭을 닫으면 끝난다
   if (!s || !s.token){ show('welcome'); return; }
   api('me', { token: s.token }).then(function(r){
     if (r.ok){ setMe(r); home(); }

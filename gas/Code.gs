@@ -79,7 +79,7 @@ var ACTIONS = {
     var u = a.f.row, uid = u[C.ID], p = period();
     var date = String(r.date || ''), yest = ymd(new Date(Date.now() - 864e5));
     if (date !== yest) return { ok: false, error: '어제(' + yest.slice(5).replace('-', '/') + ') 기록만 저장할 수 있습니다. 화면을 새로고침해 주세요.' };
-    if (date < p.start || date > p.end) return { ok: false, error: '챌린지 기간(' + p.start + ' ~ ' + p.end + ')의 기록만 저장할 수 있습니다.' };
+    if (uid !== ADMIN_ID && (date < p.start || date > p.end)) return { ok: false, error: '챌린지 기간(' + p.start + ' ~ ' + p.end + ')의 기록만 저장할 수 있습니다.' };
     var min = Math.round(Number(r.minutes));
     if (!isFinite(min) || min < 0 || min > 1440) return { ok: false, field: 'minutes', error: '사용시간을 0분~24시간 사이로 입력해 주세요.' };
     var prac = pick(r.practices, PRACTICES), fills = pick(r.fills, FILLS);
@@ -126,15 +126,15 @@ var ACTIONS = {
     for (var i = 1; i < v.length; i++) {
       var w = v[i], sh = w[R['공유']];
       if (!(sh === '공유' || (a.admin && sh === '숨김')) || bad[w[R['사용자ID']]]) continue;
-      list.push({ i: i, t: +new Date(w[R['수정시각']] || w[R['저장시각']]) || 0 });
+      list.push({ i: i, t: +new Date(w[R['수정시각']] || w[R['저장시각']]) || 0, n: w[R['사용자ID']] === ADMIN_ID });
     }
-    list.sort(function (x, y) { return y.t - x.t; });
+    list.sort(function (x, y) { return (y.n - x.n) || (y.t - x.t); }); // 운영자 공지를 맨 위에 고정
     var off = Math.max(0, parseInt(r.offset, 10) || 0), PAGE = 12;
     var items = list.slice(off, off + PAGE).map(function (o) {
       var w = v[o.i];
       return { id: w[R['기록ID']], nickname: w[R['닉네임']], team: w[R['팀']], date: String(w[R['기록일']]).replace(/^'/, ''),
         fills: w[R['채움활동']] ? String(w[R['채움활동']]).split(' | ') : [], practices: w[R['실천']] ? String(w[R['실천']]).split(' | ').length : 0,
-        note: w[R['한줄기록']], thumb: w[R['썸네일']] || '', photo: !!w[R['사진ID']], mine: !!me && w[R['사용자ID']] === me, share: w[R['공유']], at: o.t };
+        note: w[R['한줄기록']], thumb: w[R['썸네일']] || '', photo: !!w[R['사진ID']], mine: !!me && w[R['사용자ID']] === me, share: w[R['공유']], notice: o.n, at: o.t };
     });
     return { ok: true, items: items, more: off + PAGE < list.length, total: list.length };
   },
@@ -175,7 +175,7 @@ function teamStats() {
   var days = last < p.start ? 0 : Math.round((new Date(last) - new Date(p.start)) / 864e5) + 1;
   var users = sheet(SHEET_P).getDataRange().getValues(), t = {}, uTeam = {};
   for (var i = 1; i < users.length; i++) {
-    var u = users[i]; if (u[C['상태']] === '정지' || !u[C.ID]) continue;
+    var u = users[i]; if (u[C['상태']] === '정지' || !u[C.ID] || u[C.ID] === ADMIN_ID) continue; // 운영자는 참여율에서 뺀다
     var name = u[C['팀']]; uTeam[u[C.ID]] = name;
     (t[name] = t[name] || { team: name, members: 0, records: 0, yesterday: 0 }).members++;
   }
@@ -265,7 +265,7 @@ function findRecord(rid) {
 /* 내 기록 목록(최대 14행). 썸네일은 무거워 빼고 사진 유무만 보낸다. */
 function userRecords(uid) {
   var v = sheet(SHEET_R).getDataRange().getDisplayValues(), outv = [];
-  for (var i = 1; i < v.length; i++) if (v[i][R['사용자ID']] === uid) outv.push({
+  for (var i = 1; i < v.length; i++) if (v[i][R['사용자ID']] === uid && String(v[i][R['기록ID']]).indexOf('|P') < 0) outv.push({
     date: v[i][R['기록일']], minutes: +v[i][R['사용시간(분)']] || 0,
     practices: v[i][R['실천']] ? v[i][R['실천']].split(' | ') : [], fills: v[i][R['채움활동']] ? v[i][R['채움활동']].split(' | ') : [],
     note: v[i][R['한줄기록']], share: v[i][R['공유']] === '공유', photo: !!v[i][R['사진ID']]
@@ -300,7 +300,7 @@ function auth(t) {
   var id = String(t || '').split('.')[0]; if (!id) return null;
   var f = findById(id); return f && token(id, f.row[C['솔트']]) === t ? f : null;
 }
-function pub(row) { return { nickname: row[C['닉네임']], name: row[C['성명']], team: row[C['팀']], position: row[C['직위']], pledges: [row[C['다짐1']], row[C['다짐2']]].filter(String) }; }
+function pub(row) { return { nickname: row[C['닉네임']], name: row[C['성명']], team: row[C['팀']], position: row[C['직위']], pledges: [row[C['다짐1']], row[C['다짐2']]].filter(String), admin: row[C.ID] === ADMIN_ID }; }
 function suspendedMsg() { return settings()['정지안내'] || '운영자 확인이 필요한 계정입니다.'; }
 
 /* ===================== 관리자 =====================
@@ -327,7 +327,8 @@ ACTIONS.adminLogin = function (r) {
   var pw = adminPw();
   if (pw === 'CHANGE-ME' || !pw) return { ok: false, error: '시트 설정 탭의 관리자비밀번호를 먼저 정해 주세요.' };
   if (String(r.password || '') !== pw) { fail('admin'); Utilities.sleep(600); return { ok: false, error: '관리자 비밀번호가 맞지 않습니다.' }; }
-  return { ok: true, atoken: adminToken(pw) };
+  var f = adminUser();
+  return { ok: true, atoken: adminToken(pw), token: token(ADMIN_ID, f.row[C['솔트']]), user: pub(f.row), records: userRecords(ADMIN_ID), period: period() };
 };
 
 /* 한 번에 필요한 것을 모두: 참가자(기록 일수 포함), 요약, 팀 참여율 */
@@ -337,12 +338,13 @@ ACTIONS.adminData = function (r) {
   var users = sheet(SHEET_P).getDataRange().getValues(), rec = sheet(SHEET_R).getDataRange().getValues(), cnt = {}, last = {}, yCount = 0, shared = 0, hidden = 0;
   for (var j = 1; j < rec.length; j++) {
     var w = rec[j], uid = w[R['사용자ID']], d = String(w[R['기록일']]).replace(/^'/, '');
+    if (uid === ADMIN_ID) continue;
     if (d >= p.start && d <= p.end) { cnt[uid] = (cnt[uid] || 0) + 1; if (!last[uid] || d > last[uid]) last[uid] = d; if (d === yest) yCount++; }
     if (w[R['공유']] === '공유') shared++; else if (w[R['공유']] === '숨김') hidden++;
   }
   var list = [];
   for (var i = 1; i < users.length; i++) {
-    var u = users[i]; if (!u[C.ID]) continue;
+    var u = users[i]; if (!u[C.ID] || u[C.ID] === ADMIN_ID) continue;
     list.push({ id: u[C.ID], name: u[C['성명']], team: u[C['팀']], position: u[C['직위']], ext: String(u[C['내선']]).replace(/^'/, ''),
       nickname: u[C['닉네임']], joined: u[C['가입시각']] ? ymd(new Date(u[C['가입시각']])) : '', status: u[C['상태']] || '정상',
       days: cnt[u[C.ID]] || 0, last: last[u[C.ID]] || '', pledges: [u[C['다짐1']], u[C['다짐2']]].filter(String) });
@@ -400,5 +402,43 @@ ACTIONS.adminSetShare = function (r) {
     var f = findRecord(String(r.id || '')); if (!f) return { ok: false, error: '글을 찾을 수 없습니다.' };
     sheet(SHEET_R).getRange(f.index, R['공유'] + 1).setValue(r.share);
   } finally { lock.releaseLock(); }
+  return { ok: true };
+};
+
+/* ===================== 운영자(의청이) 계정 =====================
+ * 관리자 비밀번호로 로그인하면 이 계정으로 참가자와 같은 앱을 쓴다. 닉네임 '의청이'는 예약어라 참가자는 쓸 수 없다.
+ * 참여율·관리자 명단에서는 빠지고, 게시판 글은 공지로 맨 위에 고정된다. 비밀번호 해시는 무작위라 닉네임 로그인은 막혀 있다. */
+var ADMIN_ID = 'ADMIN';
+function adminUser() {
+  var f = findById(ADMIN_ID); if (f) return f;
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    f = findById(ADMIN_ID); if (f) return f;
+    var salt = Utilities.getUuid(), now = new Date(), row = [];
+    row[C.ID] = ADMIN_ID; row[C['가입시각']] = now; row[C['성명']] = '운영자'; row[C['팀']] = '운영자'; row[C['직위']] = '운영';
+    row[C['내선']] = ''; row[C['닉네임']] = '의청이'; row[C['비밀번호해시']] = hashPw(Utilities.getUuid(), salt); row[C['솔트']] = salt;
+    row[C['다짐1']] = '폰은 잠시 내려놓고 동료와 먼저 인사하기'; row[C['다짐2']] = ''; row[C['동의시각']] = now; row[C['상태']] = '정상';
+    sheet(SHEET_P).appendRow(row);
+  } finally { lock.releaseLock(); }
+  return findById(ADMIN_ID);
+}
+
+/* 공지 글쓰기: 운영자만, 날짜·횟수 제한 없이 게시판에 올린다(기록 일수에는 들어가지 않음) */
+ACTIONS.adminPost = function (r) {
+  if (!adminOk(r.atoken)) return DENY;
+  var note = str(r.note, 300);
+  if (!note && !r.photo) return { ok: false, error: '내용이나 사진을 넣어 주세요.' };
+  var thumb = /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(r.thumb || '') && r.thumb.length < 45000 ? r.thumb : '';
+  var photo = '';
+  if (r.photo) {
+    var m = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/.exec(r.photo);
+    if (!m || r.photo.length > 3000000) return { ok: false, error: '사진을 처리하지 못했습니다.' };
+    photo = photoFolder().createFile(Utilities.newBlob(Utilities.base64Decode(m[1]), 'image/jpeg', 'notice_' + Date.now() + '.jpg')).getId();
+  }
+  var f = adminUser(), now = new Date(), row = [];
+  row[R['기록ID']] = ADMIN_ID + '|P' + now.getTime(); row[R['사용자ID']] = ADMIN_ID; row[R['성명']] = '운영자'; row[R['닉네임']] = f.row[C['닉네임']]; row[R['팀']] = '운영자';
+  row[R['기록일']] = "'" + ymd(now); row[R['사용시간(분)']] = ''; row[R['실천']] = ''; row[R['채움활동']] = ''; row[R['한줄기록']] = note;
+  row[R['사진ID']] = photo; row[R['공유']] = '공유'; row[R['저장시각']] = now; row[R['수정시각']] = ''; row[R['썸네일']] = photo ? thumb : '';
+  sheet(SHEET_R).appendRow(row);
   return { ok: true };
 };
