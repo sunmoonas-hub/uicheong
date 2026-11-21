@@ -3,7 +3,7 @@
  * 처음 한 번 편집기에서 setup()을 실행하면 '참가자'·'기록'·'설정' 탭과 서명용 비밀값이 만들어진다. */
 
 var SHEET_P = '참가자', SHEET_R = '기록', SHEET_S = '설정';
-var HEAD = ['ID','가입시각','성명','팀','직위','내선','닉네임','비밀번호해시','솔트','다짐1','다짐2','동의시각','상태'];
+var HEAD = ['ID','가입시각','성명','팀','직위','내선','닉네임','비밀번호해시','솔트','다짐1','다짐2','동의시각','상태','프로필사진'];
 var RHEAD = ['기록ID','사용자ID','성명','닉네임','팀','기록일','사용시간(분)','실천','채움활동','한줄기록','사진ID','공유','저장시각','수정시각','썸네일'];
 var C = {}; HEAD.forEach(function (h, i) { C[h] = i; });
 var R = {}; RHEAD.forEach(function (h, i) { R[h] = i; });
@@ -113,7 +113,7 @@ var ACTIONS = {
   board: function (r) {
     var a = viewer(r); if (a.error) return a.error;
     // 관리자 모드에서는 숨긴 글도 함께 보여 줘서 그 자리에서 다시 공개할 수 있게 한다
-    var me = a.admin ? ADMIN_ID : a.f.row[C.ID], bad = suspendedIds(), v = sheet(SHEET_R).getDataRange().getValues(), list = [];
+    var me = a.admin ? ADMIN_ID : a.f.row[C.ID], bad = suspendedIds(), v = sheet(SHEET_R).getDataRange().getValues(), list = [], avas = avatarMap();
     for (var i = 1; i < v.length; i++) {
       var w = v[i], sh = w[R['공유']];
       if (r.mine){ if (!me || w[R['사용자ID']] !== me) continue; } // '내 글' 탭: 내 기록 전부(비공개 포함)
@@ -126,7 +126,7 @@ var ACTIONS = {
       var w = v[o.i];
       return { id: w[R['기록ID']], nickname: w[R['닉네임']], team: w[R['팀']], date: dstr(w[R['기록일']]),
         fills: w[R['채움활동']] ? String(w[R['채움활동']]).split(' | ') : [], practices: w[R['실천']] ? String(w[R['실천']]).split(' | ').length : 0,
-        note: w[R['한줄기록']], thumbs: splitThumbs(w[R['썸네일']]), photos: splitIds(w[R['사진ID']]).length, mine: !!me && w[R['사용자ID']] === me, share: w[R['공유']], notice: o.n, at: o.t };
+        note: w[R['한줄기록']], thumbs: splitThumbs(w[R['썸네일']]), photos: splitIds(w[R['사진ID']]).length, mine: !!me && w[R['사용자ID']] === me, share: w[R['공유']], notice: o.n, ava: avas[w[R['사용자ID']]] || '', at: o.t };
     });
     return { ok: true, items: items, more: off + PAGE < list.length, total: list.length };
   },
@@ -293,7 +293,7 @@ function auth(t) {
   var id = String(t || '').split('.')[0]; if (!id) return null;
   var f = findById(id); return f && token(id, f.row[C['솔트']]) === t ? f : null;
 }
-function pub(row) { return { nickname: row[C['닉네임']], name: row[C['성명']], team: row[C['팀']], position: row[C['직위']], pledges: [row[C['다짐1']], row[C['다짐2']]].filter(String), admin: row[C.ID] === ADMIN_ID }; }
+function pub(row) { return { nickname: row[C['닉네임']], name: row[C['성명']], team: row[C['팀']], position: row[C['직위']], pledges: [row[C['다짐1']], row[C['다짐2']]].filter(String), admin: row[C.ID] === ADMIN_ID, avatar: String(row[C['프로필사진']] || '') }; }
 function suspendedMsg() { return settings()['정지안내'] || '운영자 확인이 필요한 계정입니다.'; }
 
 /* ===================== 관리자 =====================
@@ -428,6 +428,7 @@ ACTIONS.adminPost = function (r) {
   row[R['기록일']] = "'" + ymd(now); row[R['사용시간(분)']] = ''; row[R['실천']] = ''; row[R['채움활동']] = ''; row[R['한줄기록']] = note;
   row[R['사진ID']] = up.ids.join(','); row[R['공유']] = '공유'; row[R['저장시각']] = now; row[R['수정시각']] = ''; row[R['썸네일']] = up.thumbs.join('|');
   sheet(SHEET_R).appendRow(row);
+  addNotice('전체', '새 공지가 올라왔어요', note ? note.slice(0, 80) : '사진 공지를 확인해 주세요.');
   return { ok: true };
 };
 
@@ -486,5 +487,74 @@ ACTIONS.adminDeleteNotice = function (r) {
     splitIds(f.row[R['사진ID']]).forEach(trashFile);
     sheet(SHEET_R).deleteRow(f.index);
   } finally { lock.releaseLock(); }
+  return { ok: true };
+};
+
+/* ===================== 프로필(MY) ===================== */
+function ensureAvatarCol() {
+  var sh = sheet(SHEET_P), col = C['프로필사진'] + 1;
+  if (sh.getRange(1, col).getValue() !== '프로필사진') { sh.getRange(1, col).setValue('프로필사진').setFontWeight('bold'); sh.hideColumns(col); } // 사진 데이터라 칸이 길어 숨긴다
+}
+function avatarMap() {
+  var v = sheet(SHEET_P).getDataRange().getValues(), o = {};
+  for (var i = 1; i < v.length; i++) if (v[i][C['프로필사진']]) o[v[i][C.ID]] = v[i][C['프로필사진']];
+  return o;
+}
+/* 닉네임 바꾸기·프로필 사진 넣기/바꾸기/지우기. 닉네임을 바꾸면 내 지난 글의 닉네임도 함께 바꾼다 */
+ACTIONS.updateProfile = function (r) {
+  var a = active(r.token); if (a.error) return a.error;
+  var uid = a.f.row[C.ID], isAdm = uid === ADMIN_ID;
+  ensureAvatarCol();
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var f = findById(uid), sh = sheet(SHEET_P);
+    if (r.nickname != null) {
+      var nick = cleanNick(r.nickname);
+      if (nick !== f.row[C['닉네임']]) {
+        var bad = nickError(nick); if (bad && !(isAdm && nick === '의청이')) return { ok: false, field: 'nickname', error: bad };
+        var dup = findByNick(nick); if (dup && dup.row[C.ID] !== uid) return { ok: false, field: 'nickname', error: '이미 사용 중인 닉네임입니다.' };
+        sh.getRange(f.index, C['닉네임'] + 1).setValue(nick);
+        var rs = sheet(SHEET_R), v = rs.getDataRange().getValues();
+        for (var i = 1; i < v.length; i++) if (v[i][R['사용자ID']] === uid) rs.getRange(i + 1, R['닉네임'] + 1).setValue(nick);
+      }
+    }
+    if (r.removeAvatar) sh.getRange(f.index, C['프로필사진'] + 1).setValue('');
+    else if (r.avatar) {
+      if (!JPEG.test(r.avatar) || r.avatar.length > 30000) return { ok: false, error: '사진이 너무 큽니다. 다른 사진으로 시도해 주세요.' };
+      sh.getRange(f.index, C['프로필사진'] + 1).setValue(r.avatar);
+    }
+  } finally { lock.releaseLock(); }
+  return { ok: true, user: pub(findById(uid).row) };
+};
+
+/* ===================== 알림 =====================
+ * '알림' 탭: 운영자가 보낸 알림(대상 '전체' 또는 참가자 ID). 시스템 알림(어제 기록 안내·10일 달성)은 저장하지 않고 그때그때 만든다. */
+var SHEET_N = '알림', NHEAD = ['ID', '시각', '대상', '제목', '내용', '보낸이'];
+function addNotice(target, title, body) {
+  var sh = sheet(SHEET_N);
+  if (sh.getLastRow() === 0) { sh.appendRow(NHEAD); sh.setFrozenRows(1); sh.getRange(1, 1, 1, NHEAD.length).setFontWeight('bold'); }
+  sh.appendRow(['N' + Date.now(), new Date(), target, str(title, 60), str(body, 500), '운영자']);
+}
+ACTIONS.notifications = function (r) {
+  var a = viewer(r); if (a.error) return a.error;
+  var uid = a.admin ? ADMIN_ID : a.f.row[C.ID], items = [];
+  var sh = sheet(SHEET_N), v = sh.getLastRow() ? sh.getDataRange().getValues() : [];
+  for (var i = 1; i < v.length; i++) if (v[i][2] === '전체' || v[i][2] === uid)
+    items.push({ id: String(v[i][0]), at: +new Date(v[i][1]) || 0, title: v[i][3], body: v[i][4], from: v[i][5] || '운영자' });
+  if (uid !== ADMIN_ID) { // 시스템 알림
+    var p = period(), today = ymd(new Date()), yest = ymd(new Date(Date.now() - 864e5)), recs = userRecords(uid);
+    var midnight = +new Date(today + 'T00:00:00+09:00');
+    if (yest >= p.start && yest <= p.end && !recs.some(function (x) { return x.date === yest; }))
+      items.push({ id: 'sys-' + yest, at: midnight, title: '어제 기록을 남겨 주세요', body: Number(yest.slice(5, 7)) + '월 ' + Number(yest.slice(8)) + '일 하루를 돌아보고 기록하면 새싹이 한 마디 자라요.', from: '의청이' });
+    if (recs.length >= 10) items.push({ id: 'sys-done', at: +new Date(recs[9].date + 'T23:00:00+09:00'), title: '10일 기록 달성! 🌼', body: '완수 기준을 채웠어요. 마무리 설문(12월 7일~9일)까지 참여하면 완수예요.', from: '의청이' });
+  }
+  items.sort(function (x, y) { return y.at - x.at; });
+  return { ok: true, items: items.slice(0, 40) };
+};
+ACTIONS.adminNotify = function (r) {
+  if (!adminOk(r.atoken)) return DENY;
+  var title = str(r.title, 60), body = str(r.body, 500);
+  if (!title) return { ok: false, error: '알림 제목을 입력해 주세요.' };
+  addNotice('전체', title, body);
   return { ok: true };
 };
