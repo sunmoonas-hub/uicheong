@@ -428,6 +428,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 .share-tg input:checked{background:var(--brand);border-color:var(--brand)}.share-tg input:checked::after{opacity:1}
 .share-tg:has(input:checked){border-color:var(--brand);background:var(--brand-soft)}
 .share-tg.dis{color:var(--sub);cursor:default}
+.share-tg small{display:block;font-size:12px;font-weight:500;color:var(--sub);margin-top:1px}
 .post .private{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;color:var(--ink2);background:var(--fill);border-radius:999px;padding:2px 8px;vertical-align:2px}
 #feedEmpty{margin:0 -20px;background:var(--surface)}
 
@@ -1506,7 +1507,7 @@ function postEl(it){
   if (it.ava) el.querySelector('.ava img').src = it.ava;
   if (body) el.querySelector('.post-body').textContent = body;
   if (n) buildCarousel(el.querySelector('.post-photo'), it);
-  if (feedMode === 'mine' && it.mine && !it.notice) shareToggle(el, it); // '내 글' 탭: 공개 여부 체크
+  if (it.mine && !it.notice) shareToggle(el, it); // 내가 올린 글: '내 글'과 공개 게시판 모두에서 공개 여부 체크
   if (it.notice && isAdmin()){ // 운영자만: 공지 삭제
     var del = document.createElement('button'); del.type = 'button'; del.className = 'post-del'; del.textContent = '삭제';
     del.onclick = function(){
@@ -1529,7 +1530,8 @@ $('btnMore').onclick = function(){ loadBoard(false); };
 function shareToggle(el, it){
   var hidByAdmin = it.share === '숨김';
   var lab = document.createElement('label'); lab.className = 'share-tg' + (hidByAdmin ? ' dis' : '');
-  lab.innerHTML = '<input type="checkbox"' + (it.share === '공유' ? ' checked' : '') + (hidByAdmin ? ' disabled' : '') + '><span>' + (hidByAdmin ? '운영자가 숨긴 글이에요' : '의청 공개 게시판에 공개') + '</span>';
+  var label = function(on){ return hidByAdmin ? '운영자가 숨긴 글이에요' : on ? '공개 중<small>체크를 풀면 공개 게시판에서 내려가요</small>' : '공개 안 함<small>체크하면 의청 공개 게시판에 올라가요</small>'; };
+  lab.innerHTML = '<input type="checkbox"' + (it.share === '공유' ? ' checked' : '') + (hidByAdmin ? ' disabled' : '') + '><span>' + label(it.share === '공유') + '</span>';
   var cb = lab.firstChild;
   cb.onchange = function(){
     var want = cb.checked; cb.disabled = true;
@@ -1540,7 +1542,12 @@ function shareToggle(el, it){
       var b = el.querySelector('.post-h b'), pv = b.querySelector('.private');
       if (want && pv) pv.remove(); if (!want && !pv) b.insertAdjacentHTML('beforeend', '<span class="private">나만 보기</span>');
       try { localStorage.removeItem(feedKey('all')); localStorage.removeItem(feedKey('mine')); } catch(e){} // 저장본을 비워 공개 게시판에 바로 반영
+      lab.querySelector('span').innerHTML = label(want);
       toast(want ? '의청 공개 게시판에 올렸어요' : '공개 게시판에서 내렸어요');
+      if (!want && feedMode === 'all'){ // 공개 게시판에서 보고 있었다면 그 자리에서 글을 내린다
+        el.style.transition = 'opacity .25s'; el.style.opacity = '0';
+        setTimeout(function(){ el.remove(); feedOff = Math.max(0, feedOff - 1); if (!$('feed').children.length) $('feedEmpty').hidden = false; }, 250);
+      }
     });
   };
   el.appendChild(lab);
