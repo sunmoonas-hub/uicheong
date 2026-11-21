@@ -973,6 +973,7 @@ function demoApi(action, r){
     }
   }
   else if (action === 'cards'){ var all3 = demoPeople(users), mp = {}; all3.forEach(function(u){ (u.recs || []).forEach(function(x){ mp[u.id + '|' + x.date] = x; }); }); res = { ok:true, items: (r.items || []).map(function(q){ var x = mp[q.id]; return { id: q.id, idx: q.idx, src: x && x.thumbs && x.thumbs[q.idx] || '' }; }) }; }
+  else if (action === 'deletePost'){ var rs4 = load('pfDemoRecs') || {}, ok4 = false; (rs4[r.token] || []).forEach(function(x){ if (r.token + '|' + x.date === r.id){ x.note = ''; x.thumbs = []; x.photos = 0; x.share = false; x.deleted = true; ok4 = true; } }); save('pfDemoRecs', rs4); res = ok4 ? { ok:true } : { ok:false, error:'내 글만 삭제할 수 있어요.' }; }
   else if (action === 'setShare'){ var rs2 = load('pfDemoRecs') || {}, hit2 = null; (rs2[r.token] || []).forEach(function(x){ if (r.token + '|' + x.date === r.id){ x.share = r.share; hit2 = x; } }); save('pfDemoRecs', rs2); res = hit2 ? { ok:true, share: r.share ? '공유' : '비공개' } : { ok:false, error:'내 글만 바꿀 수 있어요.' }; }
   else if (action === 'recordPhotos'){ var mine2 = ((load('pfDemoRecs') || {})[r.token] || []).filter(function(x){ return x.date === r.date; })[0]; res = { ok:true, thumbs: mine2 && mine2.thumbs || [] }; }
   else if (action === 'demoSuspend'){ users.forEach(function(u){ if (u.id === r.token) u.status = '정지'; }); save('pfDemoUsers', users); res = { ok:true }; }
@@ -981,7 +982,7 @@ function demoApi(action, r){
     var all = demoPeople(users), y = fmt(new Date(today() - DAY)), p = per();
     if (action === 'board'){
       var posts = [];
-      all.forEach(function(u){ (u.recs || []).forEach(function(x){ if (r.mine ? u.id === r.token : x.share) posts.push({ share: x.share ? '공유' : '비공개', id: u.id + '|' + x.date, nickname: u.nickname, team: u.team, date: x.date, fills: x.fills, practices: (x.practices || []).length, note: x.note, thumbs: x.thumbs || [], photos: (x.thumbs || []).length, mine: u.id === r.token, at: x.at || +ymd(x.date) + 9 * 36e5 }); }); });
+      all.forEach(function(u){ (u.recs || []).forEach(function(x){ if (!x.deleted && (r.mine ? u.id === r.token : x.share)) posts.push({ share: x.share ? '공유' : '비공개', id: u.id + '|' + x.date, nickname: u.nickname, team: u.team, date: x.date, fills: x.fills, practices: (x.practices || []).length, note: x.note, thumbs: x.thumbs || [], photos: (x.thumbs || []).length, mine: u.id === r.token, at: x.at || +ymd(x.date) + 9 * 36e5 }); }); });
       posts.sort(function(a, b){ return b.at - a.at; });
       var off = +r.offset || 0; res = { ok:true, items: posts.slice(off, off + 12), more: off + 12 < posts.length, total: posts.length };
     } else if (action === 'teams'){
@@ -1541,6 +1542,7 @@ function postEl(it){
   if (body) el.querySelector('.post-body').textContent = body;
   if (n) buildCarousel(el.querySelector('.post-photo'), it);
   if (it.mine && !it.notice) shareToggle(el, it); // 내가 올린 글: '내 글'과 공개 게시판 모두에서 공개 여부 체크
+  if (it.mine && !it.notice && feedMode === 'mine') mineDelete(el, it); // '내 글' 탭: 글 삭제
   if (it.notice && isAdmin()){ // 운영자만: 공지 삭제
     var del = document.createElement('button'); del.type = 'button'; del.className = 'post-del'; del.textContent = '삭제';
     del.onclick = function(){
@@ -1558,6 +1560,24 @@ function postEl(it){
   return el;
 }
 $('btnMore').onclick = function(){ loadBoard(false); };
+
+/* 내 글 삭제: 한 줄 기록과 사진만 지운다(그날 기록과 기록 일수는 남음) */
+function mineDelete(el, it){
+  var del = document.createElement('button'); del.type = 'button'; del.className = 'post-del'; del.textContent = '삭제';
+  del.onclick = function(){
+    ask('이 글을 삭제할까요?', (it.note || md(it.date) + ' 기록').slice(0, 40) + '\n한 줄 기록과 사진이 지워지고 게시판에서 사라져요. 그날 사용 시간·실천 기록과 기록 일수는 그대로 남아요.', '삭제', true).then(function(yes){
+      if (!yes) return; busy(del, true, '');
+      api('deletePost', { token: tok(), atoken: atok(), id: it.id }).then(function(r){
+        if (!r.ok){ busy(del, false); if (!authFail(r)) toast(r.error); return; }
+        try { localStorage.removeItem(feedKey('mine')); localStorage.removeItem(feedKey('all')); } catch(e){}
+        el.style.transition = 'opacity .25s'; el.style.opacity = '0';
+        setTimeout(function(){ el.remove(); feedOff = Math.max(0, feedOff - 1); if (!$('feed').children.length) $('feedEmpty').hidden = false; }, 250);
+        toast('글을 삭제했어요');
+      });
+    });
+  };
+  el.querySelector('.post-h').appendChild(del);
+}
 
 /* 내 글 공개 설정: 체크하면 의청 공개 게시판에도 보이고, 해제하면 공개 게시판에서만 빠진다(내 글에는 그대로) */
 function shareToggle(el, it){

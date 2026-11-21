@@ -116,6 +116,7 @@ var ACTIONS = {
     var me = a.admin ? ADMIN_ID : a.f.row[C.ID], bad = suspendedIds(), v = sheet(SHEET_R).getDataRange().getValues(), list = [], avas = avatarMap();
     for (var i = 1; i < v.length; i++) {
       var w = v[i], sh = w[R['공유']];
+      if (sh === '삭제') continue; // 본인이 글을 지운 기록(기록 자체는 남음)
       if (r.mine){ if (!me || w[R['사용자ID']] !== me) continue; } // '내 글' 탭: 내 기록 전부(비공개 포함)
       else if (sh !== '공유' || bad[w[R['사용자ID']]]) continue;
       list.push({ i: i, t: +new Date(w[R['수정시각']] || w[R['저장시각']]) || 0, n: String(w[R['기록ID']]).indexOf(ADMIN_ID + '|P') === 0 }); // 공지 글쓰기로 올린 글만 공지(운영자의 일반 기록은 보통 글)
@@ -606,4 +607,23 @@ ACTIONS.cards = function (r) {
     try { return { id: q.id, idx: k, src: 'data:image/jpeg;base64,' + Utilities.base64Encode(DriveApp.getFileById(pid).getBlob().getBytes()) }; }
     catch (e) { return { id: q.id, idx: k, src: '' }; }
   }) };
+};
+
+/* 내 글 삭제: 한 줄 기록과 사진만 지우고, 그날 기록(사용 시간·실천)과 기록 일수는 남긴다. 공유 칸은 '삭제'로 바꿔 게시판 양쪽에서 뺀다.
+ * 그날을 다시 기록(수정)하면 체크에 따라 다시 공개/비공개로 돌아온다. */
+ACTIONS.deletePost = function (r) {
+  var a = viewer(r); if (a.error) return a.error;
+  var me = a.admin ? ADMIN_ID : a.f.row[C.ID], id = String(r.id || '');
+  if (id.indexOf(ADMIN_ID + '|P') === 0) return ACTIONS.adminDeleteNotice(r); // 운영자 공지는 공지 삭제로
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var f = findRecord(id);
+    if (!f || f.row[R['사용자ID']] !== me) return { ok: false, error: '내 글만 삭제할 수 있어요.' };
+    splitIds(f.row[R['사진ID']]).forEach(trashFile); splitIds(f.row[R['카드ID']]).forEach(trashFile);
+    var row = f.row.slice(); while (row.length < RHEAD.length) row.push('');
+    row[R['한줄기록']] = ''; row[R['사진ID']] = ''; row[R['썸네일']] = ''; row[R['카드ID']] = ''; row[R['공유']] = '삭제'; row[R['수정시각']] = new Date();
+    row[R['기록일']] = "'" + dstr(row[R['기록일']]); // 날짜 칸이 날짜 형식으로 바뀌지 않게
+    sheet(SHEET_R).getRange(f.index, 1, 1, RHEAD.length).setValues([row]);
+  } finally { lock.releaseLock(); }
+  return { ok: true };
 };
