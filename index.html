@@ -1616,7 +1616,9 @@ function openViewer(it, i){
   i = i || 0; var key = it.id + '#' + i, n = (it.thumbs || []).length; vItem = { it: it, i: i };
   $('vPrev').hidden = $('vNext').hidden = $('vCnt').hidden = n < 2; $('vCnt').textContent = (i + 1) + ' / ' + n;
   viewerFor = key; $('viewerImg').src = FULL[key] || it.thumbs[i] || '';
-  if (FULL[key]){ $('viewerMsg').textContent = ''; return; } $('viewerMsg').textContent = it.photos > i ? '원본을 불러오는 중…' : ''; $('viewer').hidden = false; $('viewerX').focus();
+  $('viewer').hidden = false; $('viewerX').focus(); // 창부터 연다(받아 둔 원본이 있어도 반드시 열리도록)
+  if (FULL[key]){ $('viewerMsg').textContent = ''; return; }
+  $('viewerMsg').textContent = it.photos > i ? '원본을 불러오는 중…' : '';
   if (!(it.photos > i)) return;
   api('photo', { token: tok(), atoken: atok(), id: it.id, idx: i }).then(function(r){
     if (viewerFor !== key || $('viewer').hidden) return;
