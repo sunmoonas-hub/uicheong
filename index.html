@@ -41,6 +41,7 @@
   }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important} /* .btn{display:flex} 같은 규칙이 숨김을 덮어 운영자 전용 버튼이 참가자에게 보이던 문제를 막는다 */
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:16px;line-height:1.5;letter-spacing:-.01em;-webkit-text-size-adjust:100%;word-break:keep-all;-webkit-font-smoothing:antialiased}
 body{min-height:100vh;min-height:100dvh}
 .wrap{max-width:440px;margin:0 auto;min-height:100vh;min-height:100dvh;position:relative}
@@ -118,7 +119,7 @@ h1,h2,h3{margin:0;font-weight:700}
 #fSignup{min-height:calc(100dvh - 160px);display:flex;flex-direction:column}
 #fSignup .cta{margin-top:auto}
 /* 기록하기: 아래 탭이 보이므로 저장 버튼을 탭 바로 위에 띄운다 */
-#s-record .cta{bottom:calc(62px + env(safe-area-inset-bottom));padding-bottom:12px}
+#s-record .cta{bottom:calc(66px + env(safe-area-inset-bottom));padding-bottom:10px}
 #s-record.tabbed{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 
 .card{background:var(--surface);border-radius:var(--r-lg);padding:22px 20px;margin:12px 0}
@@ -1473,7 +1474,8 @@ function loadBoard(reset){
     else $('feed').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
   }
   else busy($('btnMore'), true, '불러오는 중');
-  api('board', { token: tok(), atoken: atok(), offset: feedOff, mine: feedMode === 'mine' }).then(function(r){
+  // 새로 불러오기는 늘 첫 페이지(0)부터. 저장본을 그려 둔 feedOff로 요청하면 그다음 글부터 와서 목록이 비어 보였다
+  api('board', { token: tok(), atoken: atok(), offset: reset ? 0 : feedOff, mine: feedMode === 'mine' }).then(function(r){
     if (seq !== feedSeq) return;
     feedBusy = false; if (!reset) busy($('btnMore'), false);
     if (!r.ok){ if (authFail(r)) return; if (shown) return toast('새 글을 불러오지 못했어요'); $('feed').innerHTML = '<div class="feed-empty"><p><b>게시판을 불러오지 못했어요</b>' + esc(r.error) + '</p></div>'; return; }
