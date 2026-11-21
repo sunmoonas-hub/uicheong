@@ -117,6 +117,9 @@ h1,h2,h3{margin:0;font-weight:700}
 #fSignup .in{background:var(--surface)} /* 가입 단계는 카드 없이 회색 바탕 위에 바로 놓이므로 입력칸을 흰 면으로 */
 #fSignup{min-height:calc(100dvh - 160px);display:flex;flex-direction:column}
 #fSignup .cta{margin-top:auto}
+/* 기록하기: 아래 탭이 보이므로 저장 버튼을 탭 바로 위에 띄운다 */
+#s-record .cta{bottom:calc(62px + env(safe-area-inset-bottom));padding-bottom:12px}
+#s-record.tabbed{padding-bottom:calc(84px + env(safe-area-inset-bottom))}
 
 .card{background:var(--surface);border-radius:var(--r-lg);padding:22px 20px;margin:12px 0}
 .card h3{font-size:18px;font-weight:700;color:var(--ink);margin:0 0 4px}
@@ -716,7 +719,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
   </section>
 
   <!-- 기록하기: 하루 1번, '어제' 하루를 돌아보며 남긴다 -->
-  <section class="screen" id="s-record">
+  <section class="screen tabbed" id="s-record">
     <div class="head"><button class="back" data-go="home" aria-label="뒤로">‹</button><h2 id="rTitle">어제 기록하기</h2></div>
     <form id="fRecord" novalidate>
       <div class="card">
@@ -956,6 +959,7 @@ function demoApi(action, r){
       res = { ok:true, edited: !!old, records: list };
     }
   }
+  else if (action === 'setShare'){ var rs2 = load('pfDemoRecs') || {}, hit2 = null; (rs2[r.token] || []).forEach(function(x){ if (r.token + '|' + x.date === r.id){ x.share = r.share; hit2 = x; } }); save('pfDemoRecs', rs2); res = hit2 ? { ok:true, share: r.share ? '공유' : '비공개' } : { ok:false, error:'내 글만 바꿀 수 있어요.' }; }
   else if (action === 'recordPhotos'){ var mine2 = ((load('pfDemoRecs') || {})[r.token] || []).filter(function(x){ return x.date === r.date; })[0]; res = { ok:true, thumbs: mine2 && mine2.thumbs || [] }; }
   else if (action === 'demoSuspend'){ users.forEach(function(u){ if (u.id === r.token) u.status = '정지'; }); save('pfDemoUsers', users); res = { ok:true }; }
   else if (action === 'board' || action === 'teams' || action === 'photo'){
@@ -986,7 +990,7 @@ function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e
 function drop(k){ try { localStorage.removeItem(k); } catch(e){} }
 
 /* ---------- 화면 전환 ---------- */
-var TABS = ['home', 'board', 'stats', 'my', 'admin'];
+var TABS = ['home', 'record', 'board', 'stats', 'my', 'admin']; // 기록하기 화면에서도 아래 탭을 보여 준다
 /* 화면 이동을 브라우저 기록에 남겨, 휴대폰의 뒤로(취소) 버튼이 앱을 끄지 않고 전 화면으로 가게 한다.
  * opt.pop: 뒤로 가기로 온 경우(기록을 건드리지 않음), opt.replace: 지금 기록을 바꿔치기(로그인 직후 등) */
 var CUR = null, ROOT_AT = 0;
