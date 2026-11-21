@@ -1,7 +1,7 @@
 /* 의좋은 폰프리 청 챌린지 — 설정. 주소와 목록은 HTML이 아니라 이 파일에서 바꾼다. */
 window.PF_CONFIG = {
   // Apps Script 웹앱 /exec 주소. 비워 두면 데모 모드(이 브라우저에만 저장, 참여 코드 1234)로 동작한다.
-  APPS_SCRIPT_URL: '',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby69b5wmACjpZQuJFt_d5DOQNCNn0oIP4MmYmHuBZO_Tl22PL7bhSzNXqMmIZ4537OpTA/exec',
 
   // 부장님 xlsx(「의좋은 폰프리 청 챌린지 앱 구성 및 팀명」)의 팀명 13개. 참여율 집계 단위이므로 글자를 바꾸면 집계가 갈린다
   TEAMS: ['교육장', '교육과, 초등교육팀', '중등교육팀', '유아교육, 체육교육, 방과후·돌봄팀',
