@@ -126,7 +126,7 @@ var ACTIONS = {
     for (var i = 1; i < v.length; i++) {
       var w = v[i], sh = w[R['공유']];
       if (!(sh === '공유' || (a.admin && sh === '숨김')) || bad[w[R['사용자ID']]]) continue;
-      list.push({ i: i, t: +new Date(w[R['수정시각']] || w[R['저장시각']]) || 0, n: w[R['사용자ID']] === ADMIN_ID });
+      list.push({ i: i, t: +new Date(w[R['수정시각']] || w[R['저장시각']]) || 0, n: String(w[R['기록ID']]).indexOf(ADMIN_ID + '|P') === 0 }); // 공지 글쓰기로 올린 글만 공지(운영자의 일반 기록은 보통 글)
     }
     list.sort(function (x, y) { return (y.n - x.n) || (y.t - x.t); }); // 운영자 공지를 맨 위에 고정
     var off = Math.max(0, parseInt(r.offset, 10) || 0), PAGE = 12;
