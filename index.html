@@ -1556,7 +1556,7 @@ $('btnMore').onclick = function(){ loadBoard(false); };
 function shareToggle(el, it){
   var hidByAdmin = it.share === '숨김';
   var lab = document.createElement('label'); lab.className = 'share-tg' + (hidByAdmin ? ' dis' : '');
-  var label = function(on){ return hidByAdmin ? '운영자가 숨긴 글이에요' : on ? '공개 중<small>체크를 풀면 공개 게시판에서 내려가요</small>' : '공개 안 함<small>체크하면 의청 공개 게시판에 올라가요</small>'; };
+  var label = function(on){ return hidByAdmin ? '운영자가 숨긴 글이에요' : on ? '공개 중<small>체크를 풀면 공개 게시판에서 내려가요</small>' : '비공개 중<small>체크하면 의청 공개 게시판에 올라가요</small>'; };
   lab.innerHTML = '<input type="checkbox"' + (it.share === '공유' ? ' checked' : '') + (hidByAdmin ? ' disabled' : '') + '><span>' + label(it.share === '공유') + '</span>';
   var cb = lab.firstChild;
   cb.onchange = function(){
