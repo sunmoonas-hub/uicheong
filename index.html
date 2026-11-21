@@ -320,15 +320,15 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
         <div><dt>완수</dt><dd>14일 중 10일 이상 기록하고 마무리 설문 참여</dd></div>
         <div><dt>대상</dt><dd>의정부교육지원청 직원 누구나</dd></div>
       </dl>
-      <button class="btn pri" data-go="signup">참여 신청하기</button>
-      <button class="btn sec" data-go="login">이미 신청했어요, 로그인</button>
+      <button class="btn pri" data-go="login">로그인</button>
+      <button class="btn sec" data-go="signup">회원가입</button>
       <p class="foot">민원 응대, 매일 업무 등 업무상 필요한 사용은 예외입니다.<br>경기도의정부교육지원청</p>
     </div>
   </section>
 
   <!-- 회원가입 -->
   <section class="screen" id="s-signup">
-    <div class="head"><button class="back" id="sBack" type="button" aria-label="이전 단계">‹</button><div class="steps" role="progressbar" aria-label="참여 신청 진행" aria-valuemin="1" aria-valuemax="5"><i id="sBar"></i></div><span class="step-count" id="sCount">1/5</span></div>
+    <div class="head"><button class="back" id="sBack" type="button" aria-label="이전 단계">‹</button><div class="steps" role="progressbar" aria-label="회원가입 진행" aria-valuemin="1" aria-valuemax="5"><i id="sBar"></i></div><span class="step-count" id="sCount">1/5</span></div>
 
     <form id="fSignup" novalidate autocomplete="off">
       <div class="card step">
@@ -675,7 +675,7 @@ function goStep(n){
   $('sBar').style.width = ((n + 1) / STEPS.length * 100) + '%';
   $('sCount').textContent = (n + 1) + '/' + STEPS.length;
   document.querySelector('#s-signup .steps').setAttribute('aria-valuenow', n + 1);
-  $('btnSignup').textContent = n === STEPS.length - 1 ? '신청하고 시작하기' : '다음';
+  $('btnSignup').textContent = n === STEPS.length - 1 ? '가입하고 시작하기' : '다음';
   $('signupErr').textContent = '';
   window.scrollTo(0, 0);
   var f = document.querySelector('#fSignup .step.cur .in'); // 자판이 바로 올라오도록 첫 칸에 초점(선택 칸은 제외)
@@ -725,7 +725,7 @@ $('fSignup').addEventListener('submit', function(e){
   if (step < STEPS.length - 1) return goStep(step + 1);
   var all = [].concat.apply([], STEPS), bad = all.filter(function(id){ return fieldErr(id, formData()); })[0];
   if (bad){ goStep(stepOf(bad)); validate(STEPS[step]); return; }
-  var btn = $('btnSignup'); busy(btn, true, '신청하는 중…');
+  var btn = $('btnSignup'); busy(btn, true, '가입하는 중…');
   api('register', formData()).then(function(r){
     busy(btn, false);
     if (!r.ok){
@@ -735,7 +735,7 @@ $('fSignup').addEventListener('submit', function(e){
     }
     drop(SKEY); setMe(r, r.token);
     $('fSignup').reset(); nickOkFor = ''; checkPw();
-    home(); toast('참여 신청을 마쳤어요');
+    home(); toast('회원가입을 마쳤어요');
   });
 });
 
