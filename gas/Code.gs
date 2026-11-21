@@ -35,7 +35,7 @@ var ACTIONS = {
     if (!codeOk(r.code)) return { ok: false, field: 'code', error: '참여 코드가 맞지 않습니다. 메신저로 받은 코드를 확인해 주세요.' };
     var s = settings();
     if (String(s['가입허용'] || '예').trim() === '아니오') return { ok: false, error: '지금은 가입을 받지 않습니다.' };
-    var name = str(r.name, 20), team = str(r.team, 30), pos = str(r.position, 20), ext = String(r.ext || '').replace(/\D/g, '');
+    var name = str(r.name, 20), team = str(r.team, 30), pos = str(r.position, 50), ext = String(r.ext || '').replace(/\D/g, '');
     var nick = cleanNick(r.nickname), pw = String(r.password || ''), p1 = str(r.pledge1, 60), p2 = str(r.pledge2, 60);
     if (name.length < 2) return { ok: false, field: 'name', error: '성명을 입력해 주세요.' };
     if (!team) return { ok: false, field: 'team', error: '팀을 선택해 주세요.' };
@@ -368,6 +368,25 @@ ACTIONS.adminSetStatus = function (r) {
   } finally { lock.releaseLock(); }
   CacheService.getScriptCache().remove('teams');
   return { ok: true };
+};
+
+/* 계정 삭제: 참가자 행과 그 사람의 기록 행을 모두 지우고, 사진(원본·게시판용)은 휴지통으로 보낸다.
+ * 되돌릴 수 없다. 운영 계정(의청이)은 지울 수 없다. 기록 행은 아래에서부터 지워야 행 번호가 밀리지 않는다. */
+ACTIONS.adminDeleteUser = function (r) {
+  if (!adminOk(r.atoken)) return DENY;
+  var id = String(r.id || ''); if (!id || id === ADMIN_ID) return { ok: false, error: '이 계정은 삭제할 수 없습니다.' };
+  var lock = LockService.getScriptLock(), n = 0; lock.waitLock(20000);
+  try {
+    var f = findById(id); if (!f) return { ok: false, error: '참가자를 찾을 수 없습니다.' };
+    var rs = sheet(SHEET_R), v = rs.getDataRange().getValues();
+    for (var i = v.length - 1; i >= 1; i--) if (v[i][R['사용자ID']] === id) {
+      splitIds(v[i][R['사진ID']]).forEach(trashFile); splitIds(v[i][R['카드ID']]).forEach(trashFile);
+      rs.deleteRow(i + 1); n++;
+    }
+    sheet(SHEET_P).deleteRow(f.index);
+  } finally { lock.releaseLock(); }
+  CacheService.getScriptCache().remove('teams');
+  return { ok: true, records: n };
 };
 
 /* 비밀번호 초기화: 임시 비밀번호를 만들어 관리자에게만 보여 준다. 솔트가 바뀌어 그 사람의 기존 로그인은 풀린다. */

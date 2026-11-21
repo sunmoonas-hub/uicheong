@@ -258,16 +258,16 @@ function renderUsers(){
       return '<tr' + (u.status === '정지' ? ' class="off"' : '') + '><td><b>' + esc(u.name) + '</b><span class="sub">' + esc(u.position) + '</span></td><td>' + esc(u.team) + '</td><td class="tnum">' + esc(u.ext) + '</td><td>' + esc(u.nickname) + '</td><td class="tnum">' + md(u.joined) + '</td>' +
         '<td class="num">' + u.days + (u.days >= 10 ? ' <span class="pill done">완수</span>' : '') + '</td><td class="tnum">' + md(u.last) + '</td>' +
         '<td><span class="pill' + (u.status === '정지' ? ' off' : '') + '">' + esc(u.status) + '</span></td>' +
-        '<td><div class="acts"><button class="btn sm" data-reset="' + esc(u.id) + '">비밀번호 초기화</button><button class="btn sm ' + (u.status === '정지' ? 'soft' : 'danger') + '" data-status="' + esc(u.id) + '">' + (u.status === '정지' ? '정지 해제' : '정지') + '</button></div></td></tr>';
+        '<td><div class="acts"><button class="btn sm" data-reset="' + esc(u.id) + '">비밀번호 초기화</button><button class="btn sm danger" data-del="' + esc(u.id) + '">계정 삭제</button></div></td></tr>';
     }).join('') + '</tbody>' : '<tbody><tr><td class="empty">' + (DATA.users.length ? '검색 결과가 없습니다.' : '아직 가입한 사람이 없습니다.') + '</td></tr></tbody>';
 }
 $('userTable').addEventListener('click', function(e){
   var b = e.target.closest('button'); if (!b) return;
-  var id = b.dataset.reset || b.dataset.status, u = DATA.users.filter(function(x){ return x.id === id; })[0]; if (!u) return;
-  if (b.dataset.status){
-    var to = u.status === '정지' ? '정상' : '정지';
-    ask(to === '정지' ? '계정을 정지할까요?' : '정지를 풀까요?', u.name + ' (' + u.team + ', 닉네임 ' + u.nickname + ')\n' + (to === '정지' ? '정지하면 로그인해도 안내 화면만 보이고, 게시판·참여율에서 빠집니다.' : '다시 기록하고 게시판을 쓸 수 있게 됩니다.'), to === '정지' ? '정지' : '정지 해제', to === '정지')
-      .then(function(yes){ if (!yes) return; b.disabled = true; api('adminSetStatus', { id: id, status: to }).then(function(r){ b.disabled = false; if (!r.ok) return toast(r.error); u.status = to; renderUsers(); toast(to === '정지' ? '정지했어요' : '정지를 풀었어요'); }); });
+  var id = b.dataset.reset || b.dataset.del, u = DATA.users.filter(function(x){ return x.id === id; })[0]; if (!u) return;
+  if (b.dataset.del){ // 되돌릴 수 없어서, 삭제 내용을 분명히 보여 주고 한 번 더 묻는다
+    ask('계정을 삭제할까요?', u.name + ' (' + u.team + ', 닉네임 ' + u.nickname + ')\n가입 정보와 기록 ' + u.days + '일치, 올린 글·사진이 모두 지워집니다. 되돌릴 수 없습니다.\n같은 사람이 다시 가입할 수 있습니다.', '계정 삭제', true)
+      .then(function(yes){ if (!yes) return; b.disabled = true; api('adminDeleteUser', { id: id }).then(function(r){ b.disabled = false; if (!r.ok) return toast(r.error);
+        DATA.users = DATA.users.filter(function(x){ return x.id !== id; }); renderUsers(); toast(u.nickname + ' 계정을 삭제했어요'); if (typeof load === 'function') load(); }); });
   } else {
     ask('비밀번호를 초기화할까요?', u.name + ' (닉네임 ' + u.nickname + ')\n임시 비밀번호가 만들어지고, 그 사람의 기존 로그인은 풀립니다.', '초기화', true)
       .then(function(yes){ if (!yes) return; b.disabled = true; api('adminResetPw', { id: id }).then(function(r){ b.disabled = false; if (!r.ok) return toast(r.error);
