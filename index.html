@@ -786,8 +786,8 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
   <section class="screen tabbed" id="s-board">
     <h1 class="page-title">게시판</h1>
     <div class="seg" role="tablist" id="feedSeg">
-      <button role="tab" data-feed="mine">내 글</button>
-      <button role="tab" data-feed="all" aria-selected="true">의청 공개 게시판</button>
+      <button role="tab" data-feed="mine" aria-selected="true">내 글</button>
+      <button role="tab" data-feed="all">의청 공개 게시판</button>
     </div>
     <button class="btn pri" id="btnCompose" hidden style="margin-bottom:12px">공지 글쓰기</button>
     <div id="feed"></div>
@@ -1465,6 +1465,7 @@ $('btnBlockedOut').onclick = function(){ show('welcome'); };
 document.querySelectorAll('.tabbar button').forEach(function(b){ b.onclick = function(){
   var t = b.dataset.tab;
   if (t === 'home') return home();
+  if (t === 'board') setFeed('mine'); // 게시판 탭을 누르면 늘 '내 글'부터
   if (t === 'record'){ if (target()) return openRecord(); var st = ymd(per().start); return toast(today() < new Date(st.getTime() + DAY) ? md(fmt(new Date(st.getTime() + DAY))) + '부터 기록할 수 있어요' : '기록 기간이 끝났어요'); }
   show(t);
 }; });
@@ -1486,7 +1487,7 @@ function ago(ms){
 }
 
 /* ---------- 게시판 ---------- */
-var feedOff = 0, feedBusy = false, feedMode = 'all'; // all: 의청 게시판, mine: 내 글
+var feedOff = 0, feedBusy = false, feedMode = 'mine'; // all: 의청 게시판, mine: 내 글
 document.querySelectorAll('#feedSeg button').forEach(function(b){ b.onclick = function(){ setFeed(b.dataset.feed); loadBoard(true); }; });
 function setFeed(m){ feedMode = m; document.querySelectorAll('#feedSeg button').forEach(function(x){ x.setAttribute('aria-selected', x.dataset.feed === m); }); }
 var feedSeq = 0;
