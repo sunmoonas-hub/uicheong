@@ -1493,7 +1493,11 @@ var feedSeq = 0;
 /* 게시판 첫 페이지는 휴대폰에 저장해 두었다가 바로 보여 준다(서버 응답 3~10초를 기다리지 않게). 새 응답이 오면 바뀐 경우에만 다시 그린다 */
 function feedKey(mode){ return 'pfFeed:' + mode + ':' + (isAdmin() ? 'A' : (ME.user && ME.user.nickname) || ''); }
 function feedSig(items){ return items.map(function(i){ return i.id + '|' + i.at + '|' + i.share + '|' + (i.note || '').length + '|' + (i.thumbs || []).length; }).join(','); }
-function prefetchBoard(){ api('board', { token: tok(), atoken: atok(), offset: 0 }).then(function(r){ if (r.ok) save(feedKey('all'), r); }); }
+function prefetchBoard(){ api('board', { token: tok(), atoken: atok(), offset: 0 }).then(function(r){
+  if (!r.ok) return; save(feedKey('all'), r);
+  // 홈에 있는 동안 공개 게시판 위쪽 글들의 첫 사진을 미리 받아 휴대폰에 저장해 둔다(게시판을 열면 바로 보이게)
+  r.items.filter(function(it){ return it.photos; }).slice(0, 4).forEach(function(it){ fullInto({}, it, 0); });
+}); }
 function loadBoard(reset){
   if (!reset && feedBusy) return; // 더 보기만 겹치지 않게 막고, 탭 전환(새로 불러오기)은 늦게 온 옛 응답을 버린다
   feedBusy = true; var seq = ++feedSeq, cached = reset ? load(feedKey(feedMode)) : null, shown = '';
