@@ -972,6 +972,7 @@ function demoApi(action, r){
       res = { ok:true, edited: !!old, records: list };
     }
   }
+  else if (action === 'cards'){ var all3 = demoPeople(users), mp = {}; all3.forEach(function(u){ (u.recs || []).forEach(function(x){ mp[u.id + '|' + x.date] = x; }); }); res = { ok:true, items: (r.items || []).map(function(q){ var x = mp[q.id]; return { id: q.id, idx: q.idx, src: x && x.thumbs && x.thumbs[q.idx] || '' }; }) }; }
   else if (action === 'setShare'){ var rs2 = load('pfDemoRecs') || {}, hit2 = null; (rs2[r.token] || []).forEach(function(x){ if (r.token + '|' + x.date === r.id){ x.share = r.share; hit2 = x; } }); save('pfDemoRecs', rs2); res = hit2 ? { ok:true, share: r.share ? '공유' : '비공개' } : { ok:false, error:'내 글만 바꿀 수 있어요.' }; }
   else if (action === 'recordPhotos'){ var mine2 = ((load('pfDemoRecs') || {})[r.token] || []).filter(function(x){ return x.date === r.date; })[0]; res = { ok:true, thumbs: mine2 && mine2.thumbs || [] }; }
   else if (action === 'demoSuspend'){ users.forEach(function(u){ if (u.id === r.token) u.status = '정지'; }); save('pfDemoUsers', users); res = { ok:true }; }
@@ -1289,7 +1290,7 @@ function Picker(grid, file, clear, note){
   P.reset = function(list){ P.items = list || []; note.textContent = ''; P.render(); };
   P.payload = function(){
     return { keep: P.items.filter(function(x){ return x.old; }).map(function(x){ return x.idx; }),
-             photos: P.items.filter(function(x){ return !x.old; }).map(function(x, i){ return { full: x.full, thumb: i === 0 && !P.items.some(function(y){ return y.old; }) ? x.big : x.thumb }; }) };
+             photos: P.items.filter(function(x){ return !x.old; }).map(function(x, i){ return { full: x.full, card: x.card, thumb: i === 0 && !P.items.some(function(y){ return y.old; }) ? x.big : x.thumb }; }) };
   };
   file.addEventListener('change', function(){
     var files = [].slice.call(this.files || []); this.value = '';
@@ -1310,7 +1311,8 @@ function Picker(grid, file, clear, note){
           if (full.length > 2800000) full = shrink(img, 1280, .8);
           var th = shrink(img, 220, .55); if (th.length > 8500) th = shrink(img, 180, .45);
           var big = shrink(img, 480, .7); if (big.length > 22000) big = shrink(img, 400, .6); if (big.length > 22000) big = th;
-          P.items.push({ full: full, thumb: th, big: big });
+          var card = shrink(img, 720, .72); if (card.length > 400000) card = shrink(img, 640, .62); // 게시판용(원본의 약 1/6)
+          P.items.push({ full: full, thumb: th, big: big, card: card });
         } catch (e){ toast('처리하지 못한 사진이 있어요.'); }
         URL.revokeObjectURL(url); P.render(); next();
       };
@@ -1582,11 +1584,28 @@ function shareToggle(el, it){
 /* 게시판 사진 슬라이드: 손가락으로 옆으로 밀면 다음 장(스크롤 스냅). 화면에 보이는 장만 원본을 받아 선명하게 바꾼다 */
 var FULL = {}; // 받은 원본(이 화면을 쓰는 동안만 기억)
 var seen = 'IntersectionObserver' in window ? new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ seen.unobserve(e.target); e.target._load(); } }); }, { rootMargin: '200px' }) : null;
-function fullInto(img, it, i){
-  var key = it.id + '#' + i;
-  if (FULL[key]){ img.src = FULL[key]; return; }
+var CARD = {}, cardQ = [], cardT = null, CSTORE = 'pf-cards-v1';
+var cardCache = ('caches' in window) ? caches.open(CSTORE).catch(function(){ return null; }) : Promise.resolve(null);
+function cardURL(key){ return location.origin + '/__card/' + encodeURIComponent(key); } // 캐시에 넣을 때 쓰는 가짜 주소(실제로 요청하지 않음)
+function cardPut(key, src){ CARD[key] = src; cardCache.then(function(c){ if (c) c.put(cardURL(key), new Response(src, { headers: { 'Content-Type': 'text/plain' } })); }).catch(function(){}); }
+function cardGet(key){ if (CARD[key]) return Promise.resolve(CARD[key]); return cardCache.then(function(c){ return c ? c.match(cardURL(key)) : null; }).then(function(r){ return r ? r.text() : null; }).then(function(t){ if (t) CARD[key] = t; return t; }).catch(function(){ return null; }); }
+function flushCards(){
+  cardT = null; var batch = cardQ.splice(0, 6); if (!batch.length) return;
+  api('cards', { token: tok(), atoken: atok(), items: batch.map(function(b){ return { id: b.it.id, idx: b.i }; }) }).then(function(r){
+    var got = {}; ((r && r.items) || []).forEach(function(x){ if (x.src) got[x.id + '#' + x.idx] = x.src; });
+    batch.forEach(function(b){ var k = b.it.id + '#' + b.i; b.img._busy = false; if (got[k]){ cardPut(ckey(b.it, b.i), got[k]); b.img.src = got[k]; } });
+  });
+  if (cardQ.length) cardT = setTimeout(flushCards, 0);
+}
+function ckey(it, i){ return it.id + '#' + i + '@' + (it.at || 0); } // 글을 고치면(at이 바뀌면) 예전 저장본을 쓰지 않는다
+function fullInto(img, it, i){ // 이름은 그대로 두고, 게시판에서는 중간 크기 사진을 쓴다
+  var key = ckey(it, i);
   if (!(it.photos > i) || img._busy) return; img._busy = true;
-  api('photo', { token: tok(), atoken: atok(), id: it.id, idx: i }).then(function(r){ img._busy = false; if (r.ok){ FULL[key] = r.src; img.src = r.src; } });
+  cardGet(key).then(function(src){
+    if (src){ img._busy = false; img.src = src; return; }
+    cardQ.push({ it: it, i: i, img: img });
+    if (cardQ.length >= 6){ clearTimeout(cardT); flushCards(); } else if (!cardT) cardT = setTimeout(flushCards, 80); // 잠깐 모아서 한 번에
+  });
 }
 function buildCarousel(box, it){
   var car = box.querySelector('.pcar'), n = it.thumbs.length, cnt = box.querySelector('.cnt'), dots = box.querySelectorAll('.pdots i');
@@ -1594,7 +1613,7 @@ function buildCarousel(box, it){
     var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', '사진 ' + (i + 1) + '/' + n + ' 크게 보기');
     b.innerHTML = '<img alt="' + esc(it.nickname) + '님이 올린 사진 ' + (i + 1) + '" loading="lazy" decoding="async">';
     var img = b.firstChild; if (t) img.src = t;
-    b._load = function(){ fullInto(img, it, i); };
+    b._load = function(){ fullInto(img, it, i); var nx = car.children[i + 1]; if (nx && nx._load && i === 0) setTimeout(nx._load, 300); };
     b.onclick = function(){ openViewer(it, i); };
     car.appendChild(b);
     if (i === 0){ if (seen) seen.observe(b); else b._load(); }
@@ -1615,7 +1634,7 @@ var vItem = null;
 function openViewer(it, i){
   i = i || 0; var key = it.id + '#' + i, n = (it.thumbs || []).length; vItem = { it: it, i: i };
   $('vPrev').hidden = $('vNext').hidden = $('vCnt').hidden = n < 2; $('vCnt').textContent = (i + 1) + ' / ' + n;
-  viewerFor = key; $('viewerImg').src = FULL[key] || it.thumbs[i] || '';
+  viewerFor = key; $('viewerImg').src = FULL[key] || CARD[ckey(it, i)] || it.thumbs[i] || '';
   $('viewer').hidden = false; $('viewerX').focus(); // 창부터 연다(받아 둔 원본이 있어도 반드시 열리도록)
   if (FULL[key]){ $('viewerMsg').textContent = ''; return; }
   $('viewerMsg').textContent = it.photos > i ? '원본을 불러오는 중…' : '';

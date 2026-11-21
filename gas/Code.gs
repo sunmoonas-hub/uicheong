@@ -4,7 +4,7 @@
 
 var SHEET_P = '참가자', SHEET_R = '기록', SHEET_S = '설정';
 var HEAD = ['ID','가입시각','성명','팀','직위','내선','닉네임','비밀번호해시','솔트','다짐1','다짐2','동의시각','상태','프로필사진'];
-var RHEAD = ['기록ID','사용자ID','성명','닉네임','팀','기록일','사용시간(분)','실천','채움활동','한줄기록','사진ID','공유','저장시각','수정시각','썸네일'];
+var RHEAD = ['기록ID','사용자ID','성명','닉네임','팀','기록일','사용시간(분)','실천','채움활동','한줄기록','사진ID','공유','저장시각','수정시각','썸네일','카드ID'];
 var C = {}; HEAD.forEach(function (h, i) { C[h] = i; });
 var R = {}; RHEAD.forEach(function (h, i) { R[h] = i; });
 // 화면(index.html)의 같은 목록과 글자까지 똑같아야 한다. 시트에서 사람이 바로 읽도록 한글 그대로 저장한다
@@ -99,7 +99,7 @@ var ACTIONS = {
       row[R['기록ID']] = rid; row[R['사용자ID']] = uid; row[R['성명']] = u[C['성명']]; row[R['닉네임']] = u[C['닉네임']]; row[R['팀']] = u[C['팀']];
       row[R['기록일']] = "'" + date; row[R['사용시간(분)']] = min; row[R['실천']] = prac.join(' | '); row[R['채움활동']] = fills.join(' | ');
       row[R['한줄기록']] = note; row[R['공유']] = share ? '공유' : '비공개';
-      row[R['사진ID']] = merged.ids.join(','); row[R['썸네일']] = merged.thumbs.join('|');
+      row[R['사진ID']] = merged.ids.join(','); row[R['썸네일']] = merged.thumbs.join('|'); row[R['카드ID']] = merged.cards.join(',');
       if (!found) row[R['저장시각']] = now; row[R['수정시각']] = found ? now : '';
       for (var i = 0; i < RHEAD.length; i++) if (row[i] === undefined) row[i] = '';
       if (found) sh.getRange(found.index, 1, 1, RHEAD.length).setValues([row]); else sh.appendRow(row);
@@ -436,7 +436,7 @@ ACTIONS.adminPost = function (r) {
   var f = adminUser(), now = new Date(), row = [];
   row[R['기록ID']] = ADMIN_ID + '|P' + now.getTime(); row[R['사용자ID']] = ADMIN_ID; row[R['성명']] = '운영자'; row[R['닉네임']] = f.row[C['닉네임']]; row[R['팀']] = '운영자';
   row[R['기록일']] = "'" + ymd(now); row[R['사용시간(분)']] = ''; row[R['실천']] = ''; row[R['채움활동']] = ''; row[R['한줄기록']] = note;
-  row[R['사진ID']] = up.ids.join(','); row[R['공유']] = '공유'; row[R['저장시각']] = now; row[R['수정시각']] = ''; row[R['썸네일']] = up.thumbs.join('|');
+  row[R['사진ID']] = up.ids.join(','); row[R['공유']] = '공유'; row[R['저장시각']] = now; row[R['수정시각']] = ''; row[R['썸네일']] = up.thumbs.join('|'); row[R['카드ID']] = up.cards.join(',');
   sheet(SHEET_R).appendRow(row);
   addNotice('전체', '새 공지가 올라왔어요', note ? note.slice(0, 80) : '사진 공지를 확인해 주세요.');
   return { ok: true };
@@ -450,24 +450,29 @@ var JPEG = /^data:image\/jpeg;base64,([A-Za-z0-9+/=]+)$/;
 function splitIds(v) { return String(v || '').split(',').filter(String); }
 function splitThumbs(v) { return String(v || '').split('|').filter(function (t) { return t.indexOf('data:image/jpeg;base64,') === 0; }); }
 function uploadPhotos(list, base) {
-  var ids = [], thumbs = [];
+  var ids = [], thumbs = [], cards = [];
   list = Array.isArray(list) ? list.slice(0, MAX_PHOTOS) : [];
+  if (list.length) { var hc = sheet(SHEET_R).getRange(1, R['카드ID'] + 1); if (hc.getValue() !== '카드ID') hc.setValue('카드ID').setFontWeight('bold'); } // 새 열 머리글
   for (var i = 0; i < list.length; i++) {
     var m = JPEG.exec(list[i] && list[i].full || '');
     if (!m || list[i].full.length > 3000000) { ids.forEach(trashFile); return { error: '사진을 처리하지 못했습니다. 다른 사진으로 시도해 주세요.' }; }
     ids.push(photoFolder().createFile(Utilities.newBlob(Utilities.base64Decode(m[1]), 'image/jpeg', base + '_' + (i + 1) + '.jpg')).getId());
     thumbs.push(JPEG.test(list[i].thumb || '') ? list[i].thumb : '');
+    // 게시판용 중간 크기(720px, 원본의 약 1/6). 없으면 원본을 그대로 쓴다
+    var mc = JPEG.exec(list[i].card || '');
+    cards.push(mc && list[i].card.length < 900000 ? photoFolder().createFile(Utilities.newBlob(Utilities.base64Decode(mc[1]), 'image/jpeg', base + '_' + (i + 1) + '_card.jpg')).getId() : '');
   }
-  return { ids: ids, thumbs: thumbs };
+  return { ids: ids, thumbs: thumbs, cards: cards };
 }
 function mergePhotos(row, keep, up) {
   var oldIds = row ? splitIds(row[R['사진ID']]) : [], oldTh = row ? String(row[R['썸네일']] || '').split('|') : [];
   var keepIdx = Array.isArray(keep) ? keep.map(Number) : oldIds.map(function (_, i) { return i; }); // keep을 안 보내면 옛 사진은 그대로
-  var ids = [], thumbs = [];
-  oldIds.forEach(function (id, i) { if (keepIdx.indexOf(i) >= 0 && ids.length < MAX_PHOTOS) { ids.push(id); thumbs.push(oldTh[i] || ''); } else trashFile(id); });
-  up.ids.forEach(function (id, i) { if (ids.length < MAX_PHOTOS) { ids.push(id); thumbs.push(up.thumbs[i] || ''); } else trashFile(id); });
+  var oldCards = row ? String(row[R['카드ID']] || '').split(',') : [];
+  var ids = [], thumbs = [], cards = [];
+  oldIds.forEach(function (id, i) { if (keepIdx.indexOf(i) >= 0 && ids.length < MAX_PHOTOS) { ids.push(id); thumbs.push(oldTh[i] || ''); cards.push(oldCards[i] || ''); } else { trashFile(id); if (oldCards[i]) trashFile(oldCards[i]); } });
+  up.ids.forEach(function (id, i) { if (ids.length < MAX_PHOTOS) { ids.push(id); thumbs.push(up.thumbs[i] || ''); cards.push(up.cards[i] || ''); } else { trashFile(id); if (up.cards[i]) trashFile(up.cards[i]); } });
   while (thumbs.join('|').length > THUMB_TOTAL) { var k = thumbs.lastIndexOf(thumbs.filter(String).pop()); if (k < 0) break; thumbs[k] = ''; } // 칸 한도를 넘으면 뒤에서부터 썸네일만 비운다(원본은 남음)
-  return { ids: ids, thumbs: thumbs };
+  return { ids: ids, thumbs: thumbs, cards: cards };
 }
 
 /* 기록 수정 화면용: 내 기록의 썸네일을 그때만 받아 온다(평소 목록에는 싣지 않아 가볍게) */
@@ -494,7 +499,7 @@ ACTIONS.adminDeleteNotice = function (r) {
   var lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     var f = findRecord(id); if (!f) return { ok: false, error: '이미 삭제된 글입니다.' };
-    splitIds(f.row[R['사진ID']]).forEach(trashFile);
+    splitIds(f.row[R['사진ID']]).forEach(trashFile); splitIds(f.row[R['카드ID']]).forEach(trashFile);
     sheet(SHEET_R).deleteRow(f.index);
   } finally { lock.releaseLock(); }
   return { ok: true };
@@ -584,4 +589,21 @@ ACTIONS.setShare = function (r) {
     sheet(SHEET_R).getRange(f.index, R['공유'] + 1).setValue(r.share === true ? '공유' : '비공개');
   } finally { lock.releaseLock(); }
   return { ok: true, share: r.share === true ? '공유' : '비공개' };
+};
+
+/* 게시판 사진 여러 장을 한 번에: [{id, idx}] 최대 6장. 중간 크기(카드)가 있으면 그것을, 없으면 원본을 보낸다.
+ * 사진마다 서버를 따로 부르면 호출마다 1~2초씩 쌓여서, 화면에 보이는 장들을 묶어 한 번에 보낸다. */
+ACTIONS.cards = function (r) {
+  var a = viewer(r); if (a.error) return a.error;
+  var me = a.admin ? ADMIN_ID : a.f.row[C.ID], v = sheet(SHEET_R).getDataRange().getValues(), rows = {};
+  for (var i = 1; i < v.length; i++) rows[v[i][R['기록ID']]] = v[i];
+  var list = Array.isArray(r.items) ? r.items.slice(0, 6) : [];
+  return { ok: true, items: list.map(function (q) {
+    var w = rows[String(q.id || '')], k = Math.max(0, parseInt(q.idx, 10) || 0);
+    if (!w || (w[R['공유']] !== '공유' && w[R['사용자ID']] !== me && !a.admin)) return { id: q.id, idx: k, src: '' };
+    var pid = String(w[R['카드ID']] || '').split(',')[k] || splitIds(w[R['사진ID']])[k];
+    if (!pid) return { id: q.id, idx: k, src: '' };
+    try { return { id: q.id, idx: k, src: 'data:image/jpeg;base64,' + Utilities.base64Encode(DriveApp.getFileById(pid).getBlob().getBytes()) }; }
+    catch (e) { return { id: q.id, idx: k, src: '' }; }
+  }) };
 };
