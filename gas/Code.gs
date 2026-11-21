@@ -120,11 +120,12 @@ var ACTIONS = {
   /* 게시판: '공유'로 저장한 기록만, 최근 저장 순. 정지된 사람 글과 운영자가 '숨김'으로 바꾼 글은 뺀다.
    * 썸네일(약 20KB)을 함께 보내므로 한 번에 12개씩 나눠 준다. */
   board: function (r) {
-    var a = active(r.token); if (a.error) return a.error;
-    var me = a.f.row[C.ID], bad = suspendedIds(), v = sheet(SHEET_R).getDataRange().getValues(), list = [];
+    var a = viewer(r); if (a.error) return a.error;
+    // 관리자 모드에서는 숨긴 글도 함께 보여 줘서 그 자리에서 다시 공개할 수 있게 한다
+    var me = a.admin ? '' : a.f.row[C.ID], bad = suspendedIds(), v = sheet(SHEET_R).getDataRange().getValues(), list = [];
     for (var i = 1; i < v.length; i++) {
-      var w = v[i];
-      if (w[R['공유']] !== '공유' || bad[w[R['사용자ID']]]) continue;
+      var w = v[i], sh = w[R['공유']];
+      if (!(sh === '공유' || (a.admin && sh === '숨김')) || bad[w[R['사용자ID']]]) continue;
       list.push({ i: i, t: +new Date(w[R['수정시각']] || w[R['저장시각']]) || 0 });
     }
     list.sort(function (x, y) { return y.t - x.t; });
@@ -133,17 +134,17 @@ var ACTIONS = {
       var w = v[o.i];
       return { id: w[R['기록ID']], nickname: w[R['닉네임']], team: w[R['팀']], date: String(w[R['기록일']]).replace(/^'/, ''),
         fills: w[R['채움활동']] ? String(w[R['채움활동']]).split(' | ') : [], practices: w[R['실천']] ? String(w[R['실천']]).split(' | ').length : 0,
-        note: w[R['한줄기록']], thumb: w[R['썸네일']] || '', photo: !!w[R['사진ID']], mine: w[R['사용자ID']] === me, at: o.t };
+        note: w[R['한줄기록']], thumb: w[R['썸네일']] || '', photo: !!w[R['사진ID']], mine: !!me && w[R['사용자ID']] === me, share: w[R['공유']], at: o.t };
     });
     return { ok: true, items: items, more: off + PAGE < list.length, total: list.length };
   },
 
   /* 사진 크게 보기: Drive 비공개 파일을 이 앱을 통해서만 보여 준다(공개 링크를 만들지 않는다). */
   photo: function (r) {
-    var a = active(r.token); if (a.error) return a.error;
+    var a = viewer(r); if (a.error) return a.error;
     var f = findRecord(String(r.id || ''));
     if (!f || !f.row[R['사진ID']]) return { ok: false, error: '사진을 찾을 수 없습니다.' };
-    if (f.row[R['공유']] !== '공유' && f.row[R['사용자ID']] !== a.f.row[C.ID]) return { ok: false, error: '볼 수 없는 사진입니다.' };
+    if (!a.admin && f.row[R['공유']] !== '공유' && f.row[R['사용자ID']] !== a.f.row[C.ID]) return { ok: false, error: '볼 수 없는 사진입니다.' };
     try {
       var b = DriveApp.getFileById(f.row[R['사진ID']]).getBlob();
       return { ok: true, src: 'data:image/jpeg;base64,' + Utilities.base64Encode(b.getBytes()) };
@@ -153,15 +154,17 @@ var ACTIONS = {
   /* 팀 참여율 = 팀 기록 수 ÷ (팀 가입자 수 × 지금까지 기록할 수 있었던 날 수).
    * 팀별 정원을 알 수 없어 '가입한 사람이 얼마나 꾸준히 기록했나'로 잰다. 2분 캐시. */
   teams: function (r) {
-    var a = active(r.token); if (a.error) return a.error;
+    var a = viewer(r); if (a.error) return a.error;
     var c = CacheService.getScriptCache(), hit = c.get('teams');
     var res = hit ? JSON.parse(hit) : teamStats();
     if (!hit) c.put('teams', JSON.stringify(res), 120);
-    res.ok = true; res.myTeam = a.f.row[C['팀']];
+    res.ok = true; res.myTeam = a.admin ? '' : a.f.row[C['팀']];
     return res;
   }
 };
 
+/* 참가자 토큰 또는 관리자 토큰(앱 안의 관리자 모드) 둘 다 받는 화면용 */
+function viewer(r) { return r.atoken && adminOk(r.atoken) ? { admin: true } : active(r.token); }
 function suspendedIds() {
   var v = sheet(SHEET_P).getDataRange().getValues(), o = {};
   for (var i = 1; i < v.length; i++) if (v[i][C['상태']] === '정지') o[v[i][C.ID]] = 1;

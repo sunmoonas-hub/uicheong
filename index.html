@@ -296,6 +296,46 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 .viewer p:empty{display:none}
 .viewer-x{position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:18px;cursor:pointer}
 
+/* ---------- 관리자 모드 ---------- */
+.admin-link{border:0;background:none;cursor:pointer}
+.admin-head{display:flex;align-items:center;gap:10px}
+.admin-head .page-title{margin-bottom:12px}
+.admin-badge{font-size:12px;font-weight:600;color:#fff;background:var(--ink2);border-radius:999px;padding:4px 10px;margin-top:8px}
+.astats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.astat{background:var(--surface);border-radius:var(--r-md);padding:14px 16px}
+.astat small{display:block;font-size:12px;color:var(--sub)}
+.astat b{display:block;font-size:26px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.astat b span{font-size:14px;font-weight:600;color:var(--sub);margin-left:2px}
+.seg{display:flex;background:var(--surface);border-radius:var(--r-md);padding:4px;margin-bottom:12px}
+.seg button{flex:1;border:0;background:none;border-radius:var(--r-sm);padding:10px;font-weight:600;color:var(--sub);cursor:pointer}
+.seg button[aria-selected="true"]{background:var(--fill);color:var(--ink)}
+.atools{display:flex;gap:8px;margin-bottom:10px}
+.atools .in{height:46px;font-size:15px;background:var(--surface)}
+.atools select.in{flex:0 0 42%}
+.urow{background:var(--surface);border-radius:var(--r-md);padding:14px 16px;margin-bottom:8px}
+.urow.off{opacity:.6}
+.urow .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.urow b{font-size:16px}
+.urow small{display:block;font-size:13px;color:var(--sub);margin-top:2px}
+.urow .days{text-align:right;flex:none;font-variant-numeric:tabular-nums}
+.urow .days strong{font-size:20px;font-weight:800}
+.urow .acts{display:flex;gap:6px;margin-top:12px}
+.urow .acts .btn{min-height:40px;font-size:14px;margin:0;flex:1}
+.mini{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:2px;background:var(--brand-soft);color:var(--brand-ink)}
+.mini.off{background:var(--red-soft);color:var(--red)}
+.mini.done{background:#FFF3D6;color:#8A5A00}
+.btn.danger{background:var(--red-soft);color:var(--red)}
+.post.hid{opacity:.55}
+.post-admin{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.post-admin .btn{width:auto;min-height:36px;font-size:14px;margin:0;padding:0 14px}
+.modal{position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom))}
+.modal[hidden]{display:none}
+.sheet{background:var(--surface);border-radius:var(--r-lg);padding:24px 20px 18px;width:100%;max-width:420px}
+.sheet h3{font-size:19px;margin:0 0 8px}
+.sheet p{color:var(--ink2);margin:0 0 18px;white-space:pre-line}
+.sheet .row{display:flex;gap:8px}.sheet .row .btn{flex:1;margin:0}
+.temp{font-size:30px;font-weight:800;letter-spacing:.08em;text-align:center;background:var(--fill);border-radius:var(--r-md);padding:16px;margin:0 0 14px;font-variant-numeric:tabular-nums;user-select:all}
+
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:rgba(25,31,40,.92);color:#fff;padding:12px 20px;border-radius:999px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s,transform .3s var(--ease);max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:10;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .toast.on{opacity:1;transform:translateX(-50%)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -324,7 +364,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
       </dl>
       <button class="btn pri" data-go="login">로그인</button>
       <button class="btn sec" data-go="signup">회원가입</button>
-      <a class="admin-link" href="admin.html">관리자 로그인</a>
+      <button type="button" class="admin-link" data-go="adminlogin">관리자 로그인</button>
       <p class="foot">민원 응대, 매일 업무 등 업무상 필요한 사용은 예외입니다.<br>경기도의정부교육지원청</p>
     </div>
   </section>
@@ -509,6 +549,39 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
     <button class="btn sec" id="btnMore" hidden>더 보기</button>
   </section>
 
+  <!-- 관리자 로그인: 관리자 비밀번호(시트 설정 탭)로 앱 안의 관리자 모드에 들어간다 -->
+  <section class="screen" id="s-adminlogin">
+    <div class="head"><button class="back" data-go="welcome" aria-label="뒤로">‹</button><h2>관리자 로그인</h2></div>
+    <form id="fAdmin" novalidate>
+      <h3 class="big-title">관리자 비밀번호를
+입력해 주세요</h3>
+      <p class="hint">로그인하면 게시판과 팀 참여율을 보면서 참가자 관리, 글 숨기기, 완수자 명단 내려받기를 할 수 있어요.</p>
+      <div class="pw"><input class="in" id="aPw" type="password" maxlength="64" placeholder="관리자 비밀번호" autocomplete="current-password" style="background:var(--surface)"><button type="button" class="eye" data-eye="aPw">보기</button></div>
+      <div class="formerr" id="adminErr"></div>
+      <div class="cta"><button class="btn pri" id="btnAdmin" type="submit">관리자 모드로 들어가기</button></div>
+    </form>
+  </section>
+
+  <!-- 관리 (관리자 모드에서만) -->
+  <section class="screen tabbed" id="s-admin">
+    <div class="admin-head"><h1 class="page-title">관리</h1><span class="admin-badge">관리자 모드</span></div>
+    <div class="astats" id="aStats"></div>
+    <div class="seg" role="tablist">
+      <button role="tab" data-seg="users" aria-selected="true">참가자</button>
+      <button role="tab" data-seg="done">완수자</button>
+    </div>
+    <div data-segp="users">
+      <div class="atools"><input class="in" id="aQ" placeholder="성명·닉네임·내선 검색"><select class="in" id="aTeam"><option value="">모든 팀</option></select></div>
+      <div id="aUsers"></div>
+    </div>
+    <div data-segp="done" hidden>
+      <p class="hint">기록 10일 이상, 정지되지 않은 참가자예요. 최종 완수는 마무리 설문(12월 7일~9일) 참여 여부와 대조해 확정해 주세요.</p>
+      <button class="btn sec" id="aCsv" style="margin:0 0 12px">엑셀용 CSV 내려받기</button>
+      <div id="aDone"></div>
+    </div>
+    <button class="btn ghost" id="btnAdminOut">관리자 모드 나가기</button>
+  </section>
+
   <!-- 팀 참여율 -->
   <section class="screen tabbed" id="s-rank">
     <h1 class="page-title">팀 참여율</h1>
@@ -521,6 +594,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 
 <nav class="tabbar" id="tabbar" hidden aria-label="주요 화면">
   <button data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c-.5-4.5-.2-8 1-11M13 10c0-3 2-5.5 6-6-.2 3.8-2.6 6-6 6zM12.4 13c-.3-2.6-2-4.4-5.4-4.8.1 3 1.9 4.8 5.4 4.8z"/></svg>홈</button>
+  <button data-tab="admin" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>관리</button>
   <button data-tab="board"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 10h8M8 14h5"/></svg>게시판</button>
   <button data-tab="rank"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V12M12 20V5M18 20v-5"/></svg>팀 참여율</button>
 </nav>
@@ -530,6 +604,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
   <img id="viewerImg" alt="">
   <p id="viewerMsg"></p>
 </div>
+<div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mT"><h3 id="mT"></h3><div id="mExtra"></div><p id="mP"></p><div class="row"><button class="btn sec" id="mNo">취소</button><button class="btn pri" id="mYes">확인</button></div></div></div>
 <div class="toast" id="toast"></div>
 
 <script src="config.js"></script>
@@ -614,15 +689,18 @@ function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e
 function drop(k){ try { localStorage.removeItem(k); } catch(e){} }
 
 /* ---------- 화면 전환 ---------- */
-var TABS = ['home', 'board', 'rank'];
+var TABS = ['home', 'board', 'rank', 'admin'];
 function show(name){
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.toggle('on', s.id === 's-' + name); });
   window.scrollTo(0, 0);
   if (name === 'signup') goStep(0);
   var tabbed = TABS.indexOf(name) >= 0; $('tabbar').hidden = !tabbed;
   document.querySelectorAll('.tabbar button').forEach(function(b){ if (b.dataset.tab === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  // 관리자 모드에서는 개인 기록이 없으니 홈 대신 관리 탭
+  document.querySelector('.tabbar [data-tab=home]').hidden = isAdmin(); document.querySelector('.tabbar [data-tab=admin]').hidden = !isAdmin();
   if (name === 'board') loadBoard(true);
   if (name === 'rank') loadRank();
+  if (name === 'admin') loadAdmin();
 }
 document.addEventListener('click', function(e){
   var go = e.target.closest('[data-go]'); if (go){ show(go.getAttribute('data-go')); return; }
@@ -959,7 +1037,12 @@ $('btnBlockedOut').onclick = function(){ show('welcome'); };
 /* ---------- 하단 탭 ---------- */
 document.querySelectorAll('.tabbar button').forEach(function(b){ b.onclick = function(){ if (b.dataset.tab === 'home') home(); else show(b.dataset.tab); }; });
 function tok(){ return (load(SKEY) || {}).token; }
+/* 관리자 모드 토큰: 공용 PC를 생각해 탭을 닫으면 풀리도록 sessionStorage에만 둔다 */
+function atok(){ try { return sessionStorage.getItem('pfAdmin') || ''; } catch(e){ return ''; } }
+function setAtok(t){ try { t ? sessionStorage.setItem('pfAdmin', t) : sessionStorage.removeItem('pfAdmin'); } catch(e){} }
+function isAdmin(){ return !!atok(); }
 function authFail(r){ // 공통: 정지·로그아웃 응답이면 처리하고 true
+  if (r.code === 'ADMIN'){ setAtok(''); show('adminlogin'); toast('관리자로 다시 로그인해 주세요.'); return true; }
   if (r.code === 'SUSPENDED'){ blocked(r.error); return true; }
   if (r.code === 'LOGOUT'){ drop(SKEY); show('login'); toast('다시 로그인해 주세요.'); return true; }
   return false;
@@ -976,7 +1059,7 @@ function loadBoard(reset){
   if (feedBusy) return; feedBusy = true;
   if (reset){ feedOff = 0; $('feed').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>'; $('feedEmpty').hidden = true; $('btnMore').hidden = true; }
   else busy($('btnMore'), true, '불러오는 중');
-  api('board', { token: tok(), offset: feedOff }).then(function(r){
+  api('board', { token: tok(), atoken: atok(), offset: feedOff }).then(function(r){
     feedBusy = false; if (!reset) busy($('btnMore'), false);
     if (reset) $('feed').innerHTML = '';
     if (!r.ok){ if (authFail(r)) return; $('feed').innerHTML = '<div class="feed-empty"><p><b>게시판을 불러오지 못했어요</b>' + esc(r.error) + '</p></div>'; return; }
@@ -996,7 +1079,24 @@ function postEl(it){
     (tags ? '<div class="post-tags">' + tags + '</div>' : '');
   if (it.note) el.querySelector('.post-note').textContent = it.note;
   if (it.thumb){ el.querySelector('.post-img img').src = it.thumb; el.querySelector('.post-img').onclick = function(){ openViewer(it); }; }
+  if (isAdmin()) adminPostBar(el, it);
   return el;
+}
+/* 관리자 모드: 글마다 공개 상태와 숨기기/다시 공개 버튼 */
+function adminPostBar(el, it){
+  var bar = document.createElement('div'); bar.className = 'post-admin'; el.appendChild(bar);
+  var paint = function(){
+    var hid = it.share === '숨김'; el.classList.toggle('hid', hid);
+    bar.innerHTML = '<span class="mini' + (hid ? ' off' : '') + '">' + (hid ? '숨김' : '공개 중') + '</span><button type="button" class="btn ' + (hid ? 'sec' : 'danger') + '">' + (hid ? '다시 공개' : '숨기기') + '</button>';
+    bar.querySelector('button').onclick = function(){
+      var to = hid ? '공유' : '숨김', btn = this;
+      ask(hid ? '이 글을 다시 공개할까요?' : '이 글을 숨길까요?', it.nickname + ' · ' + md(it.date) + ' 기록\n' + (hid ? '게시판에 다시 보입니다.' : '게시판에서만 빠지고, 기록과 참여율에는 그대로 남아요.'), hid ? '다시 공개' : '숨기기', !hid).then(function(yes){
+        if (!yes) return; busy(btn, true, '');
+        api('adminSetShare', { atoken: atok(), id: it.id, share: to }).then(function(r){ if (!r.ok){ busy(btn, false); if (!authFail(r)) toast(r.error); return; } it.share = to; paint(); toast(to === '숨김' ? '게시판에서 숨겼어요' : '다시 공개했어요'); });
+      });
+    };
+  };
+  paint();
 }
 $('btnMore').onclick = function(){ loadBoard(false); };
 
@@ -1005,7 +1105,7 @@ var viewerFor = null;
 function openViewer(it){
   viewerFor = it.id; $('viewerImg').src = it.thumb; $('viewerMsg').textContent = it.photo ? '원본을 불러오는 중…' : ''; $('viewer').hidden = false; $('viewerX').focus();
   if (!it.photo) return;
-  api('photo', { token: tok(), id: it.id }).then(function(r){
+  api('photo', { token: tok(), atoken: atok(), id: it.id }).then(function(r){
     if (viewerFor !== it.id || $('viewer').hidden) return;
     if (r.ok){ $('viewerImg').src = r.src; $('viewerMsg').textContent = ''; } else $('viewerMsg').textContent = r.error;
   });
@@ -1018,13 +1118,13 @@ document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !$('
 /* ---------- 팀 참여율 ---------- */
 function loadRank(){
   $('ranks').innerHTML = '<li><span></span><span class="nm" style="color:var(--sub)">불러오는 중…</span></li>'; $('myTeam').innerHTML = '';
-  api('teams', { token: tok() }).then(function(r){
+  api('teams', { token: tok(), atoken: atok() }).then(function(r){
     if (!r.ok){ if (authFail(r)) return; $('ranks').innerHTML = '<li><span></span><span class="nm">' + esc(r.error) + '</span></li>'; return; }
     // 아직 가입자가 없는 팀도 0%로 아래에 보여 준다
     var have = {}, list = r.teams.slice();
     list.forEach(function(t){ have[t.team] = 1; });
     (CFG.TEAMS || []).forEach(function(n){ if (!have[n]) list.push({ team: n, members: 0, records: 0, yesterday: 0, rate: 0 }); });
-    var mine = ME.user ? ME.user.team : r.myTeam, myIdx = -1, myRank = 0;
+    var mine = isAdmin() ? '' : ME.user ? ME.user.team : r.myTeam, myIdx = -1, myRank = 0;
     $('rankSub').textContent = r.days ? md(fmt(new Date(ymd(per().start).getTime() + (r.days - 1) * DAY))) + ' 기록까지, ' + r.days + '일 기준이에요.' : '첫 기록(11월 24일)부터 집계돼요. 참여율이 높은 팀에는 간식을 보내 드려요.';
     var rank = 0, prev = null;
     $('ranks').innerHTML = list.map(function(t, i){
@@ -1068,8 +1168,91 @@ function demoThumb(kind){
 
 $('btnDemoSuspend').onclick = function(){ var s = load(SKEY); if (!s) return; api('demoSuspend', { token: s.token }).then(function(){ toast('정지했습니다. 다시 열면 안내 화면이 보입니다.'); setTimeout(start, 900); }); };
 
+/* ---------- 확인 창: 브라우저 confirm 대신(모바일에서 보기 좋고 막히지 않게) ---------- */
+function ask(title, body, yes, danger, extra, noCancel){
+  return new Promise(function(ok){
+    $('mT').textContent = title; $('mP').textContent = body; $('mExtra').innerHTML = extra || '';
+    $('mYes').textContent = yes || '확인'; $('mYes').className = 'btn ' + (danger ? 'danger' : 'pri'); $('mNo').hidden = !!noCancel;
+    $('modal').hidden = false; $('mYes').focus();
+    $('mYes').onclick = function(){ $('modal').hidden = true; ok(true); };
+    $('mNo').onclick = function(){ $('modal').hidden = true; ok(false); };
+  });
+}
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !$('modal').hidden) $('mNo').click(); });
+
+/* ---------- 관리자 모드 ---------- */
+var AD = null;
+$('fAdmin').addEventListener('submit', function(e){
+  e.preventDefault(); $('adminErr').textContent = '';
+  if (DEMO){ $('adminErr').textContent = '데모 모드에서는 관리자 모드를 쓸 수 없어요.'; return; }
+  var pw = $('aPw').value; if (!pw){ $('adminErr').textContent = '관리자 비밀번호를 입력해 주세요.'; return; }
+  var btn = $('btnAdmin'); busy(btn, true, '확인하는 중…');
+  api('adminLogin', { password: pw }).then(function(r){
+    busy(btn, false);
+    if (!r.ok){ $('adminErr').textContent = r.error; return; }
+    $('aPw').value = ''; setAtok(r.atoken); ME.user = null; show('admin'); toast('관리자 모드로 들어왔어요');
+  });
+});
+$('btnAdminOut').onclick = function(){ setAtok(''); AD = null; show('welcome'); toast('관리자 모드에서 나왔어요'); };
+(CFG.TEAMS || []).forEach(function(t){ $('aTeam').add(new Option(t, t)); });
+$('aQ').addEventListener('input', renderAUsers); $('aTeam').addEventListener('change', renderAUsers);
+document.querySelectorAll('.seg button').forEach(function(b){ b.onclick = function(){
+  document.querySelectorAll('.seg button').forEach(function(x){ x.setAttribute('aria-selected', x === b); });
+  document.querySelectorAll('[data-segp]').forEach(function(p){ p.hidden = p.dataset.segp !== b.dataset.seg; });
+}; });
+function mmdd(s){ if (!s) return '–'; var p = s.split('-'); return +p[1] + '/' + +p[2]; }
+function loadAdmin(){
+  $('aStats').innerHTML = '<div class="astat"><small>불러오는 중…</small><b>–</b></div>';
+  api('adminData', { atoken: atok() }).then(function(r){
+    if (!r.ok){ if (!authFail(r)) $('aStats').innerHTML = '<div class="astat"><small>' + esc(r.error) + '</small></div>'; return; }
+    AD = r; var s = r.summary;
+    $('aStats').innerHTML = [['가입', s.active, '명'], ['어제(' + mmdd(r.yesterday) + ') 기록', s.yesterday, '명'], ['10일 이상 기록', s.completed, '명'], ['게시글', s.shared, '개' + (s.hidden ? ' · 숨김 ' + s.hidden : '')]]
+      .map(function(x){ return '<div class="astat"><small>' + x[0] + '</small><b>' + x[1] + '<span>' + x[2] + '</span></b></div>'; }).join('');
+    renderAUsers(); renderADone();
+  });
+}
+function renderAUsers(){
+  if (!AD) return;
+  var q = $('aQ').value.trim().toLowerCase(), tm = $('aTeam').value;
+  var list = AD.users.filter(function(u){ return (!tm || u.team === tm) && (!q || (u.name + ' ' + u.nickname + ' ' + u.ext).toLowerCase().indexOf(q) >= 0); })
+    .sort(function(a, b){ return a.team < b.team ? -1 : a.team > b.team ? 1 : a.name < b.name ? -1 : 1; });
+  $('aUsers').innerHTML = list.length ? list.map(function(u){
+    var off = u.status === '정지';
+    return '<div class="urow' + (off ? ' off' : '') + '"><div class="top"><div><b>' + esc(u.name) + '</b>' + (off ? '<span class="mini off">정지</span>' : '') + (u.days >= 10 ? '<span class="mini done">10일 달성</span>' : '') +
+      '<small>' + esc(u.team) + ' · ' + esc(u.position) + ' · 내선 ' + esc(u.ext) + '</small><small>닉네임 ' + esc(u.nickname) + ' · 가입 ' + mmdd(u.joined) + '</small></div>' +
+      '<div class="days"><strong>' + u.days + '</strong>일<small>마지막 ' + mmdd(u.last) + '</small></div></div>' +
+      '<div class="acts"><button class="btn sec" data-reset="' + esc(u.id) + '">비밀번호 초기화</button><button class="btn ' + (off ? 'sec' : 'danger') + '" data-status="' + esc(u.id) + '">' + (off ? '정지 해제' : '정지') + '</button></div></div>';
+  }).join('') : '<div class="feed-empty"><p><b>' + (AD.users.length ? '검색 결과가 없어요' : '아직 가입한 사람이 없어요') + '</b></p></div>';
+}
+$('aUsers').addEventListener('click', function(e){
+  var b = e.target.closest('button'); if (!b || !AD) return;
+  var id = b.dataset.reset || b.dataset.status, u = AD.users.filter(function(x){ return x.id === id; })[0]; if (!u) return;
+  if (b.dataset.status){
+    var to = u.status === '정지' ? '정상' : '정지';
+    ask(to === '정지' ? '계정을 정지할까요?' : '정지를 풀까요?', u.name + ' · ' + u.team + ' · 닉네임 ' + u.nickname + '\n' + (to === '정지' ? '로그인해도 안내 화면만 보이고, 게시판·참여율에서 빠져요.' : '다시 기록하고 게시판을 쓸 수 있어요.'), to === '정지' ? '정지' : '정지 해제', to === '정지')
+      .then(function(yes){ if (!yes) return; busy(b, true, ''); api('adminSetStatus', { atoken: atok(), id: id, status: to }).then(function(r){ busy(b, false); if (!r.ok){ if (!authFail(r)) toast(r.error); return; } u.status = to; renderAUsers(); toast(to === '정지' ? '정지했어요' : '정지를 풀었어요'); }); });
+  } else {
+    ask('비밀번호를 초기화할까요?', u.name + ' · 닉네임 ' + u.nickname + '\n임시 비밀번호가 만들어지고, 그 사람의 기존 로그인은 풀려요.', '초기화', true)
+      .then(function(yes){ if (!yes) return; busy(b, true, ''); api('adminResetPw', { atoken: atok(), id: id }).then(function(r){ busy(b, false); if (!r.ok){ if (!authFail(r)) toast(r.error); return; }
+        ask('임시 비밀번호', '본인에게만 직접 알려 주세요. 창을 닫으면 다시 볼 수 없어요.\n닉네임: ' + u.nickname, '닫기', false, '<div class="temp">' + esc(r.temp) + '</div>', true); }); });
+  }
+});
+function doneList(){ return AD ? AD.users.filter(function(u){ return u.days >= 10 && u.status !== '정지'; }).sort(function(a, b){ return b.days - a.days || (a.team < b.team ? -1 : 1); }) : []; }
+function renderADone(){
+  var list = doneList();
+  $('aDone').innerHTML = list.length ? list.map(function(u){ return '<div class="urow"><div class="top"><div><b>' + esc(u.name) + '</b><small>' + esc(u.team) + ' · 내선 ' + esc(u.ext) + ' · ' + esc(u.nickname) + '</small></div><div class="days"><strong>' + u.days + '</strong>일</div></div></div>'; }).join('')
+    : '<div class="feed-empty"><p><b>아직 10일 이상 기록한 사람이 없어요</b>기록이 쌓이면 여기에 명단이 나와요.</p></div>';
+}
+$('aCsv').onclick = function(){
+  var rows = [['성명', '팀', '직위', '내선', '닉네임', '기록 일수', '마지막 기록']].concat(doneList().map(function(u){ return [u.name, u.team, u.position, u.ext, u.nickname, u.days, u.last]; }));
+  var csv = rows.map(function(r){ return r.map(function(c){ c = String(c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\r\n');
+  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })); // BOM: 엑셀에서 한글이 깨지지 않게
+  a.download = '폰프리청챌린지_완수자_' + fmt(new Date()) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+};
+
 /* ---------- 시작: 저장된 로그인이 있으면 서버에서 정지 여부를 다시 확인 ---------- */
 function start(){
+  if (isAdmin() && !DEMO){ ME.user = null; show('admin'); return; } // 관리자 모드가 켜져 있으면 그대로 이어서
   var s = load(SKEY);
   if (!s || !s.token){ show('welcome'); return; }
   api('me', { token: s.token }).then(function(r){
