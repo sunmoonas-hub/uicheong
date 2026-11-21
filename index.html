@@ -405,7 +405,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 .post-h .ava{width:42px;height:42px;font-size:16px}
 .post-h b{font-size:16px;font-weight:700}
 .post-h small{font-size:14px;margin-top:1px}
-.post-title{font-size:18px;font-weight:800;letter-spacing:-.025em;line-height:1.45;margin:14px 0 4px;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
+.post-title{text-align:left;font-size:18px;font-weight:800;letter-spacing:-.025em;line-height:1.45;margin:14px 0 4px;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
 .post-body{font-size:15px;line-height:1.55;color:var(--ink2);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .post-photo{position:relative;display:block;width:100%;margin-top:14px;border:0;padding:0;border-radius:14px;overflow:hidden;aspect-ratio:4/3;background:var(--fill);cursor:zoom-in}
 .post-photo img{width:100%;height:100%;object-fit:cover;display:block}
@@ -1243,11 +1243,14 @@ function ago(ms){
 var feedOff = 0, feedBusy = false, feedMode = 'all'; // all: 의청 게시판, mine: 내 글
 document.querySelectorAll('#feedSeg button').forEach(function(b){ b.onclick = function(){ setFeed(b.dataset.feed); loadBoard(true); }; });
 function setFeed(m){ feedMode = m; document.querySelectorAll('#feedSeg button').forEach(function(x){ x.setAttribute('aria-selected', x.dataset.feed === m); }); }
+var feedSeq = 0;
 function loadBoard(reset){
-  if (feedBusy) return; feedBusy = true;
+  if (!reset && feedBusy) return; // 더 보기만 겹치지 않게 막고, 탭 전환(새로 불러오기)은 늦게 온 옛 응답을 버린다
+  feedBusy = true; var seq = ++feedSeq;
   if (reset){ feedOff = 0; $('feed').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>'; $('feedEmpty').hidden = true; $('btnMore').hidden = true; }
   else busy($('btnMore'), true, '불러오는 중');
   api('board', { token: tok(), atoken: atok(), offset: feedOff, mine: feedMode === 'mine' }).then(function(r){
+    if (seq !== feedSeq) return;
     feedBusy = false; if (!reset) busy($('btnMore'), false);
     if (reset) $('feed').innerHTML = '';
     if (!r.ok){ if (authFail(r)) return; $('feed').innerHTML = '<div class="feed-empty"><p><b>게시판을 불러오지 못했어요</b>' + esc(r.error) + '</p></div>'; return; }
