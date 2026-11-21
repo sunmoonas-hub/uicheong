@@ -102,6 +102,56 @@ select.in{appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='
 .tag{display:inline-block;font-size:12px;font-weight:700;background:var(--green-l);color:var(--green-d);border-radius:999px;padding:3px 9px}
 .foot{text-align:center;font-size:12px;color:var(--sub);margin-top:22px;line-height:1.6}
 
+/* 진행 도장 */
+.prog{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.prog b{font-size:22px;font-weight:900;color:var(--green-d)}.prog small{color:var(--sub);font-size:13px}
+.bar{height:10px;border-radius:99px;background:#efe9de;overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),#5cc277);border-radius:99px;transition:width .5s}
+.stamps{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.stamp{aspect-ratio:1;border-radius:12px;background:#f6f2ea;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;color:var(--sub);line-height:1.1;position:relative}
+.stamp b{font-size:14px;color:var(--ink);font-weight:800}
+.stamp.done{background:var(--green);color:#e6f6ea}.stamp.done b{color:#fff}
+.stamp.done::after{content:'✓';position:absolute;top:2px;right:5px;font-size:10px;font-weight:900}
+.stamp.target{outline:2px dashed var(--orange);outline-offset:-2px}
+.stamp.future{opacity:.5}
+.recbtn{margin-top:14px}
+.yest{display:flex;gap:10px;align-items:center;background:#fff7ec;border-radius:14px;padding:12px;margin-top:12px;font-size:14px;line-height:1.5}
+.yest strong{font-size:18px;color:var(--orange)}
+.yest:empty{display:none}
+
+/* 기록하기 */
+.time{display:flex;align-items:center;gap:8px}
+.time .in{text-align:center;font-size:22px;font-weight:800;height:58px;width:96px;flex:none;padding:0 8px}
+.time span{font-size:16px;font-weight:700;color:var(--sub)}
+.checks{display:grid;gap:8px}
+.check{display:flex;align-items:center;gap:12px;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;cursor:pointer;background:#fff;transition:.15s;font-size:15px;line-height:1.4}
+.check input{position:absolute;opacity:0;pointer-events:none}
+.check .box{width:24px;height:24px;border-radius:8px;border:2px solid #cfc6b8;flex:none;display:grid;place-items:center;color:#fff;font-size:14px;font-weight:900}
+.check.on{border-color:var(--green);background:var(--green-l)}
+.check.on .box{background:var(--green);border-color:var(--green)}
+.check.on .box::after{content:'✓'}
+.check small{display:block;color:var(--sub);font-size:12px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{border:1.5px solid var(--line);border-radius:14px;padding:12px 8px;text-align:center;cursor:pointer;background:#fff;transition:.15s}
+.tile input{position:absolute;opacity:0;pointer-events:none}
+.tile .l{display:block;font-size:22px;font-weight:900;color:var(--green-d)}
+.tile .t{display:block;font-size:13px;font-weight:700;margin-top:2px}
+.tile.on{border-color:var(--orange);background:#fff3e4}.tile.on .l{color:var(--orange)}
+.tile.none{grid-column:1/-1;padding:10px}.tile.none .t{color:var(--sub);margin:0}
+.tile.none.on{border-color:#9aa3ad;background:#f1f2f4}
+textarea.in{height:auto;min-height:84px;padding:12px 14px;resize:vertical;line-height:1.5}
+.count{text-align:right;font-size:12px;color:var(--sub);margin-top:4px}
+.photo-add{display:flex;align-items:center;justify-content:center;gap:8px;height:96px;border:2px dashed #d8cfc0;border-radius:14px;color:var(--sub);font-weight:700;cursor:pointer;background:#fcfaf6}
+.photo-prev{position:relative;border-radius:14px;overflow:hidden;background:#000}
+.photo-prev img{width:100%;max-height:320px;object-fit:contain;margin:0 auto}
+.photo-prev button{position:absolute;top:8px;right:8px;border:0;background:rgba(0,0,0,.6);color:#fff;border-radius:10px;padding:6px 10px;font-size:13px;cursor:pointer}
+.photo-note{font-size:13px;color:var(--sub);margin-top:8px}
+.done-card{text-align:center;padding:28px 18px}
+.done-card img{width:180px;margin:0 auto 6px}
+.done-card h2{margin:6px 0;font-size:22px}
+.done-card p{color:var(--sub);line-height:1.6;margin:4px 0}
+.done-card .big{font-size:40px;font-weight:900;color:var(--green);margin:8px 0}
+
 /* 로딩 */
 .spin{display:inline-block;width:18px;height:18px;border:3px solid rgba(255,255,255,.5);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px;margin-right:6px}
 @keyframes sp{to{transform:rotate(360deg)}}
@@ -113,7 +163,7 @@ select.in{appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='
 <body>
 <div class="wrap">
   <div class="top"><img src="assets/logo.jpg" alt="경기도의정부교육지원청"></div>
-  <div class="demo" id="demoBar" hidden>데모 모드입니다. 서버에 연결하지 않아 입력한 내용은 이 브라우저에만 저장됩니다. 참여 코드는 <b>1234</b>입니다.</div>
+  <div class="demo" id="demoBar" hidden>데모 모드입니다. 서버에 연결하지 않아 입력한 내용은 이 브라우저에만 저장됩니다. 참여 코드는 <b>1234</b>입니다. 주소 뒤에 <b>?today=2026-11-25</b>처럼 붙이면 그 날짜로 기록을 시험할 수 있습니다.</div>
 
   <div class="screen on" id="s-boot"><div class="boot">불러오는 중…</div></div>
 
@@ -221,6 +271,13 @@ select.in{appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='
     </div>
     <div class="dday"><small id="dSmall">챌린지 시작까지</small><strong id="dBig">D-2</strong><span id="dText"></span></div>
     <div class="card">
+      <div class="prog"><h3 style="margin:0">나의 기록 도장</h3><span><b id="pDays">0</b><small> / 완수 10일</small></span></div>
+      <div class="bar"><i id="pBar" style="width:0"></i></div>
+      <div class="stamps" id="stamps"></div>
+      <div class="yest" id="yest"></div>
+      <button class="btn pri recbtn" id="btnRecord">기록하기</button>
+    </div>
+    <div class="card">
       <h3>나의 폰프리 다짐</h3>
       <div id="hPledges"></div>
     </div>
@@ -232,6 +289,58 @@ select.in{appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='
     </div>
     <button class="btn ghost" id="btnLogout">로그아웃</button>
     <button class="btn ghost" id="btnDemoSuspend" hidden>데모: 이 계정을 정지 상태로 바꿔 보기</button>
+  </section>
+
+  <!-- 기록하기: 하루 1번, '어제' 하루를 돌아보며 남긴다 -->
+  <section class="screen" id="s-record">
+    <div class="head"><button class="back" data-go="home" aria-label="뒤로">‹</button><h2 id="rTitle">어제 기록하기</h2></div>
+    <form id="fRecord" novalidate>
+      <div class="card">
+        <h3><span class="num">1</span>어제 스마트폰 사용 시간</h3>
+        <p class="hint">갤럭시는 <b>설정 → 디지털 웰빙</b>, 아이폰은 <b>설정 → 스크린 타임</b>에서 어제 사용 시간을 확인할 수 있어요.</p>
+        <div class="time"><input class="in" id="rH" inputmode="numeric" maxlength="2" placeholder="0"><span>시간</span><input class="in" id="rM" inputmode="numeric" maxlength="2" placeholder="0"><span>분</span></div>
+        <div class="msg" data-for="rH"></div>
+      </div>
+      <div class="card">
+        <h3><span class="num">2</span>어제 지킨 실천</h3>
+        <p class="hint">지킨 것을 모두 골라 주세요. (여러 개 선택)</p>
+        <div class="checks" id="rPractices"></div>
+      </div>
+      <div class="card">
+        <h3><span class="num">3</span>줄인 시간을 채운 활동</h3>
+        <p class="hint">폰을 내려놓은 시간에 한 일을 골라 주세요. (여러 개 선택)</p>
+        <div class="tiles" id="rFills"></div>
+        <div class="msg" data-for="rFills"></div>
+      </div>
+      <div class="card">
+        <h3><span class="num">4</span>한 줄 기록</h3>
+        <textarea class="in" id="rNote" maxlength="100" placeholder="예: 점심에 폰 두고 동료와 산책했더니 오후가 가벼웠어요."></textarea>
+        <div class="count"><span id="rCount">0</span>/100</div>
+      </div>
+      <div class="card">
+        <h3><span class="num">5</span>사진 (선택)</h3>
+        <p class="hint">책, 산책길, 운동, 함께한 순간 등. 사람 얼굴이 나오면 당사자 동의를 받아 주세요.</p>
+        <input type="file" id="rFile" accept="image/*" hidden>
+        <label class="photo-add" for="rFile" id="rAdd">📷 사진 고르기</label>
+        <div class="photo-prev" id="rPrev" hidden><img id="rImg" alt="첨부한 사진"><button type="button" id="rDel">사진 빼기</button></div>
+        <div class="photo-note" id="rPhotoNote"></div>
+        <button type="button" class="btn ghost" id="rDelOld" hidden style="margin:4px 0 0;padding:6px;font-size:14px;color:var(--red)">기존 사진 빼기</button>
+        <label class="agree" style="font-weight:600;font-size:14px"><input type="checkbox" id="rShare" checked> 한 줄 기록과 사진을 닉네임으로 게시판에 나눌게요.</label>
+      </div>
+      <div class="formerr" id="recordErr"></div>
+      <button class="btn pri" id="btnSave" type="submit">기록 저장하기</button>
+    </form>
+  </section>
+
+  <!-- 저장 완료 -->
+  <section class="screen" id="s-saved">
+    <div class="card done-card">
+      <img src="assets/euicheong.png" alt="">
+      <h2 id="svTitle">오늘도 해냈어요!</h2>
+      <div class="big" id="svDays">1일째</div>
+      <p id="svText"></p>
+    </div>
+    <button class="btn pri" data-go="home">홈으로</button>
   </section>
 </div>
 <div class="toast" id="toast"></div>
@@ -266,15 +375,29 @@ function demoApi(action, r){
   var find = function(n){ n = String(n||'').trim().toLowerCase(); return users.filter(function(u){ return u.nickname.toLowerCase() === n; })[0]; };
   var nickErr = function(n){ if (n.length < 2 || n.length > 10) return '닉네임은 2~10자로 정해 주세요.'; if (!/^[가-힣a-zA-Z0-9_]+$/.test(n)) return '닉네임은 한글·영문·숫자·밑줄(_)만 쓸 수 있습니다.'; return ''; };
   var pub = function(u){ return { nickname: u.nickname, name: u.name, team: u.team, position: u.position, pledges: [u.pledge1, u.pledge2].filter(Boolean) }; };
+  var recsOf = function(u){ return (load('pfDemoRecs') || {})[u.id] || []; };
   var res;
   if (action === 'checkNickname'){ var e1 = nickErr(r.nickname.trim()); res = e1 ? { ok:false, error:e1 } : find(r.nickname) ? { ok:false, error:'이미 사용 중인 닉네임입니다.' } : { ok:true }; }
   else if (action === 'register'){
     if (String(r.code).trim() !== '1234') res = { ok:false, field:'code', error:'참여 코드가 맞지 않습니다. 메신저로 받은 코드를 확인해 주세요.' };
     else if (find(r.nickname)) res = { ok:false, field:'nickname', error:'이미 사용 중인 닉네임입니다.' };
-    else { var u = Object.assign({}, r, { id: 'D' + Date.now(), pw: btoa(unescape(encodeURIComponent(r.password))), status: '정상' }); delete u.password; delete u.code; users.push(u); save('pfDemoUsers', users); res = { ok:true, token:u.id, user:pub(u) }; }
+    else { var u = Object.assign({}, r, { id: 'D' + Date.now(), pw: btoa(unescape(encodeURIComponent(r.password))), status: '정상' }); delete u.password; delete u.code; users.push(u); save('pfDemoUsers', users); res = { ok:true, token:u.id, user:pub(u), records:[] }; }
   }
-  else if (action === 'login'){ var f = find(r.nickname); if (!f || f.pw !== btoa(unescape(encodeURIComponent(r.password)))) res = { ok:false, error:'닉네임 또는 비밀번호가 맞지 않습니다.' }; else if (f.status === '정지') res = { ok:false, code:'SUSPENDED', error:'운영자 확인이 필요한 계정입니다. 담당자에게 문의해 주세요.' }; else res = { ok:true, token:f.id, user:pub(f) }; }
-  else if (action === 'me'){ var m = users.filter(function(u){ return u.id === r.token; })[0]; res = !m ? { ok:false, code:'LOGOUT' } : m.status === '정지' ? { ok:false, code:'SUSPENDED', error:'운영자 확인이 필요한 계정입니다. 담당자에게 문의해 주세요.' } : { ok:true, user:pub(m) }; }
+  else if (action === 'login'){ var f = find(r.nickname); if (!f || f.pw !== btoa(unescape(encodeURIComponent(r.password)))) res = { ok:false, error:'닉네임 또는 비밀번호가 맞지 않습니다.' }; else if (f.status === '정지') res = { ok:false, code:'SUSPENDED', error:'운영자 확인이 필요한 계정입니다. 담당자에게 문의해 주세요.' }; else res = { ok:true, token:f.id, user:pub(f), records:recsOf(f) }; }
+  else if (action === 'me'){ var m = users.filter(function(u){ return u.id === r.token; })[0]; res = !m ? { ok:false, code:'LOGOUT' } : m.status === '정지' ? { ok:false, code:'SUSPENDED', error:'운영자 확인이 필요한 계정입니다. 담당자에게 문의해 주세요.' } : { ok:true, user:pub(m), records:recsOf(m) }; }
+  else if (action === 'saveRecord'){
+    var me = users.filter(function(u){ return u.id === r.token; })[0], recs = load('pfDemoRecs') || {};
+    var y = fmt(new Date(today() - DAY));
+    if (!me) res = { ok:false, code:'LOGOUT' };
+    else if (r.date !== y) res = { ok:false, error:'어제 기록만 저장할 수 있습니다. 화면을 새로고침해 주세요.' };
+    else {
+      var list = recs[me.id] || [], old = list.filter(function(x){ return x.date === r.date; })[0];
+      var rec = { date: r.date, minutes: r.minutes, practices: r.practices, fills: r.fills, note: r.note, share: r.share, photo: r.photo ? true : r.removePhoto ? false : !!(old && old.photo) };
+      list = list.filter(function(x){ return x.date !== r.date; }).concat([rec]).sort(function(a, b){ return a.date < b.date ? -1 : 1; });
+      recs[me.id] = list; save('pfDemoRecs', recs); // 데모는 사진 원본을 저장하지 않는다
+      res = { ok:true, edited: !!old, records: list };
+    }
+  }
   else if (action === 'demoSuspend'){ users.forEach(function(u){ if (u.id === r.token) u.status = '정지'; }); save('pfDemoUsers', users); res = { ok:true }; }
   return new Promise(function(ok){ setTimeout(function(){ ok(res || { ok:false, error:'알 수 없는 요청' }); }, 450); }); // 실제 서버처럼 잠깐 기다린다
 }
@@ -376,9 +499,9 @@ $('fSignup').addEventListener('submit', function(e){
       else $('signupErr').textContent = r.error;
       return;
     }
-    save(SKEY, { token: r.token, user: r.user });
+    drop(SKEY); setMe(r, r.token);
     $('fSignup').reset(); nickOkFor = ''; checkPw();
-    home(r.user); toast('참여 신청이 완료되었습니다! 🎉');
+    home(); toast('참여 신청이 완료되었습니다! 🎉');
   });
 });
 
@@ -390,26 +513,184 @@ $('fLogin').addEventListener('submit', function(e){
   var btn = $('btnLogin'); busy(btn, true, '로그인 중…');
   api('login', { nickname: n, password: p }).then(function(r){
     busy(btn, false);
-    if (r.ok){ save(SKEY, { token: r.token, user: r.user }); $('lPw').value = ''; home(r.user); return; }
+    if (r.ok){ drop(SKEY); setMe(r, r.token); $('lPw').value = ''; home(); return; }
     if (r.code === 'SUSPENDED') return blocked(r.error);
     $('loginErr').textContent = r.error;
   });
 });
 
 /* ---------- 홈 ---------- */
+var ME = { user: null, records: [], period: null }; // 로그인한 사람과 내 기록
+var DAY = 864e5, WD = ['일','월','화','수','목','금','토'];
 function ymd(s){ var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
-function today(){ var d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
-function home(u){
+function fmt(d){ return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function md(s){ var d = ymd(s); return (d.getMonth() + 1) + '월 ' + d.getDate() + '일(' + WD[d.getDay()] + ')'; }
+function today(){
+  var q = DEMO && /[?&]today=(\d{4}-\d{2}-\d{2})/.exec(location.search); // 데모에서만 ?today=2026-11-25 처럼 날짜를 흉내 내 기록 흐름을 시험한다
+  if (q) return ymd(q[1]);
+  var d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function per(){ return ME.period || { start: CFG.START, end: CFG.END }; }
+/* 기록할 날 = 어제. 어제가 챌린지 기간 밖이면 null */
+function target(){ var y = fmt(new Date(today() - DAY)), p = per(); return y >= p.start && y <= p.end ? y : null; }
+function recOf(date){ return ME.records.filter(function(r){ return r.date === date; })[0]; }
+function setMe(r, token){
+  var s = load(SKEY) || {};
+  if (token) s.token = token;
+  if (r.user) s.user = ME.user = r.user;
+  if (r.records) s.records = ME.records = r.records;
+  if (r.period) s.period = ME.period = r.period;
+  save(SKEY, s);
+}
+function home(){
+  var u = ME.user;
   $('hHello').textContent = u.nickname + '님, 환영합니다!';
   $('hTeam').innerHTML = ''; var tg = document.createElement('span'); tg.className = 'tag'; tg.textContent = u.team; $('hTeam').appendChild(tg);
   var box = $('hPledges'); box.innerHTML = '';
   (u.pledges || []).forEach(function(p, i){ var d = document.createElement('div'); d.className = 'pledge'; d.innerHTML = '<b>' + (i + 1) + '</b><span></span>'; d.lastChild.textContent = p; box.appendChild(d); });
-  var t = today(), st = ymd(CFG.START), en = ymd(CFG.END), ro = ymd(CFG.RECORD_OPEN), day = 864e5;
-  if (t < st){ $('dSmall').textContent = '챌린지 시작까지'; $('dBig').textContent = 'D-' + Math.round((st - t) / day); $('dText').textContent = '11월 23일(월)부터 시작해요. 첫 기록은 11월 24일(화)에 \'어제\' 하루를 돌아보며 남깁니다.'; }
-  else if (t <= en){ var n = Math.round((t - st) / day) + 1; $('dSmall').textContent = '챌린지 진행 중'; $('dBig').textContent = n + '일째 / 14일'; $('dText').textContent = t < ro ? '내일부터 어제 하루를 기록할 수 있어요.' : '매일 기록하기는 곧 열립니다. 14일 중 10일 이상 기록하면 완수!'; }
-  else { $('dSmall').textContent = '챌린지 종료'; $('dBig').textContent = '수고하셨습니다!'; $('dText').textContent = '마무리 설문(12. 7.~12. 9.)까지 참여하면 완수입니다.'; }
+  var t = today(), p = per(), st = ymd(p.start), en = ymd(p.end), tg = target(), n = ME.records.length;
+  if (t < st){ $('dSmall').textContent = '챌린지 시작까지'; $('dBig').textContent = 'D-' + Math.round((st - t) / DAY); $('dText').textContent = md(p.start) + '부터 시작해요. 첫 기록은 다음 날 \'어제\' 하루를 돌아보며 남깁니다.'; }
+  else if (t <= en){ $('dSmall').textContent = '챌린지 진행 중'; $('dBig').textContent = (Math.round((t - st) / DAY) + 1) + '일째 / 14일'; $('dText').textContent = n >= 10 ? '기록 10일을 채웠어요! 끝까지 함께해요.' : '14일 중 10일 이상 기록하면 완수! 앞으로 ' + (10 - n) + '일 남았어요.'; }
+  else { $('dSmall').textContent = '챌린지 종료'; $('dBig').textContent = '수고하셨습니다!'; $('dText').textContent = (n >= 10 ? '기록 10일 달성! ' : '') + '마무리 설문(12. 7.~12. 9.)까지 참여하면 완수입니다.'; }
+
+  // 14일 도장판: 기록한 날은 초록, 오늘 기록할 날(어제)은 점선
+  $('pDays').textContent = n; $('pBar').style.width = Math.min(100, n * 10) + '%';
+  var box2 = $('stamps'); box2.innerHTML = '';
+  for (var d = new Date(st); d <= en; d = new Date(d.getTime() + DAY)){
+    var k = fmt(d), el = document.createElement('div');
+    el.className = 'stamp' + (recOf(k) ? ' done' : '') + (k === tg ? ' target' : '') + (d >= t ? ' future' : '');
+    el.innerHTML = '<b>' + d.getDate() + '</b>' + WD[d.getDay()];
+    box2.appendChild(el);
+  }
+  // 가장 최근 기록의 사용 시간과 그 전 기록과의 차이
+  var last = ME.records[ME.records.length - 1], prev = ME.records[ME.records.length - 2];
+  if (last){
+    var diff = prev ? prev.minutes - last.minutes : 0;
+    $('yest').innerHTML = '📱 <span>' + md(last.date) + ' 사용 시간<br><strong>' + hm(last.minutes) + '</strong>' + (prev && diff ? ' · 전 기록보다 ' + hm(Math.abs(diff)) + (diff > 0 ? ' 줄었어요 👏' : ' 늘었어요') : '') + '</span>';
+  } else $('yest').innerHTML = '';
+  var b = $('btnRecord');
+  if (tg){ var done = !!recOf(tg); b.disabled = false; b.textContent = md(tg) + ' 기록' + (done ? ' 수정하기' : '하기'); b.className = 'btn recbtn ' + (done ? 'sec' : 'pri'); }
+  else { b.disabled = true; b.className = 'btn pri recbtn'; b.textContent = t <= st ? md(fmt(new Date(st.getTime() + DAY))) + '부터 기록할 수 있어요' : '기록 기간이 끝났어요'; }
   $('btnDemoSuspend').hidden = !DEMO;
   show('home');
+}
+function hm(m){ var h = Math.floor(m / 60), r = m % 60; return (h ? h + '시간 ' : '') + (r || !h ? r + '분' : ''); }
+
+/* ---------- 기록하기 ---------- */
+var PRACTICES = [ // Code.gs의 PRACTICES와 글자까지 같아야 한다
+  { v: '회의 중 폰 내려놓기', ico: '📵', sub: '청에서 · 뒤집어 두거나 바구니에' },
+  { v: '동료와 폰 없이 점심 산책·먼저 인사', ico: '👥', sub: '함께 · 폰 대신 먼저 인사' },
+  { v: '잠들 땐 폰은 침대 밖 정해진 자리에', ico: '🌙', sub: '집에서 · 숙면과 자기조절의 시작' }
+];
+var FILLS = [{ v: 'R 독서', l: 'R', t: '독서' }, { v: 'A 예술·문화', l: 'A', t: '예술·문화' }, { v: 'S 스포츠', l: 'S', t: '스포츠' }, { v: '함께', l: '🤝', t: '함께 (동료·가족 등)' }];
+var NONE = '못 했어요';
+var photo = null; // { full, thumb } 새로 고른 사진. removePhoto는 기존 사진을 빼는 경우
+var removePhoto = false, editing = null;
+
+function optEl(cls, val, html, on){
+  var lab = document.createElement('label'); lab.className = cls + (on ? ' on' : '');
+  lab.innerHTML = '<input type="checkbox">' + html; var inp = lab.firstChild; inp.value = val; inp.checked = !!on;
+  inp.addEventListener('change', function(){ lab.classList.toggle('on', inp.checked); });
+  return lab;
+}
+function openRecord(){
+  var tg = target(); if (!tg) return;
+  editing = recOf(tg) || null; photo = null; removePhoto = false;
+  $('rTitle').textContent = md(tg) + ' 기록';
+  $('recordErr').textContent = ''; msg('rH', ''); msg('rFills', '');
+  var m = editing ? editing.minutes : null;
+  $('rH').value = m == null ? '' : Math.floor(m / 60); $('rM').value = m == null ? '' : m % 60;
+  var pr = $('rPractices'); pr.innerHTML = '';
+  var list = PRACTICES.slice();
+  (ME.user.pledges || []).forEach(function(p, i){ list.push({ v: '나의 다짐 ' + (i + 1), ico: '⭐', sub: p, label: '나의 다짐' }); });
+  list.forEach(function(o){ pr.appendChild(optEl('check', o.v, '<span class="box"></span><span class="ico">' + o.ico + '</span><span>' + esc(o.label || o.v) + '<small>' + esc(o.sub) + '</small></span>', editing && editing.practices.indexOf(o.v) >= 0)); });
+  var fl = $('rFills'); fl.innerHTML = '';
+  FILLS.forEach(function(o){ fl.appendChild(optEl('tile', o.v, '<span class="l">' + o.l + '</span><span class="t">' + o.t + '</span>', editing && editing.fills.indexOf(o.v) >= 0)); });
+  fl.appendChild(optEl('tile none', NONE, '<span class="t">어제는 채운 활동이 없어요</span>', editing && editing.fills.indexOf(NONE) >= 0));
+  $('rNote').value = editing ? editing.note : ''; $('rCount').textContent = $('rNote').value.length;
+  $('rShare').checked = editing ? editing.share : true;
+  showPhoto(null);
+  $('rPhotoNote').textContent = editing && editing.photo ? '이미 올린 사진이 있어요. 새로 고르면 바뀌고, 그대로 두면 유지됩니다.' : '';
+  $('rDelOld').hidden = !(editing && editing.photo);
+  $('btnSave').textContent = editing ? '기록 수정하기' : '기록 저장하기';
+  show('record');
+}
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+function showPhoto(src){
+  $('rPrev').hidden = !src; $('rAdd').hidden = !!src;
+  if (src){ $('rImg').src = src; $('rDel').textContent = '사진 빼기'; }
+  if (!src && editing && editing.photo && !removePhoto){ $('rAdd').textContent = '📷 사진 바꾸기'; } else $('rAdd').textContent = '📷 사진 고르기';
+}
+$('btnRecord').onclick = openRecord;
+// '채운 활동이 없어요'와 다른 활동은 함께 고를 수 없다
+$('rFills').addEventListener('change', function(e){
+  if (!e.target.checked) return;
+  var isNone = e.target.value === NONE;
+  this.querySelectorAll('input').forEach(function(i){ if ((isNone && i.value !== NONE) || (!isNone && i.value === NONE)){ i.checked = false; i.parentNode.classList.remove('on'); } });
+  msg('rFills', '');
+});
+$('rDelOld').onclick = function(){ removePhoto = true; photo = null; this.hidden = true; showPhoto(null); $('rPhotoNote').textContent = '저장하면 기존 사진이 빠집니다.'; };
+$('rNote').addEventListener('input', function(){ $('rCount').textContent = this.value.length; });
+['rH','rM'].forEach(function(id){ $(id).addEventListener('input', function(){ this.value = this.value.replace(/\D/g, ''); msg('rH', ''); }); });
+
+/* 사진 줄이기: 휴대폰 원본(수 MB)을 그대로 보내면 Apps Script 저장에 5~10초 걸린다.
+ * 긴 변 1280px·품질 0.8로 줄이면 200~400KB가 되어 2~4초 안에 끝나고, 게시판용 360px 썸네일은 시트에 바로 넣는다. */
+function shrink(img, max, q){
+  var s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  var c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+  var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', q);
+}
+$('rFile').addEventListener('change', function(){
+  var f = this.files && this.files[0]; this.value = '';
+  if (!f) return;
+  if (!/^image\//.test(f.type) && !/\.(heic|heif)$/i.test(f.name)) return toast('사진 파일만 올릴 수 있어요.');
+  $('rPhotoNote').textContent = '사진을 준비하는 중…';
+  var url = URL.createObjectURL(f), img = new Image();
+  img.onload = function(){
+    try {
+      var full = shrink(img, 1280, .8), thumb = shrink(img, 360, .6);
+      if (thumb.length > 44000) thumb = shrink(img, 300, .5); // 시트 칸에 들어가도록
+      photo = { full: full, thumb: thumb }; removePhoto = false; showPhoto(full);
+      $('rPhotoNote').textContent = '사진 준비 완료 (' + Math.round(full.length * .75 / 1024) + 'KB)';
+    } catch (e){ $('rPhotoNote').textContent = '이 사진은 처리하지 못했어요. 다른 사진을 골라 주세요.'; }
+    URL.revokeObjectURL(url);
+  };
+  img.onerror = function(){ URL.revokeObjectURL(url); $('rPhotoNote').textContent = '이 형식의 사진은 열 수 없어요. 카메라 설정을 \'호환성 우선(JPG)\'으로 하거나 다른 사진을 골라 주세요.'; };
+  img.src = url;
+});
+$('rDel').onclick = function(){ photo = null; showPhoto(null); $('rPhotoNote').textContent = editing && editing.photo && !removePhoto ? '이미 올린 사진이 유지됩니다.' : ''; };
+
+$('fRecord').addEventListener('submit', function(e){
+  e.preventDefault(); $('recordErr').textContent = '';
+  var tg = target(); if (!tg){ home(); return toast('기록할 수 있는 날이 아니에요.'); }
+  var h = $('rH').value, m = $('rM').value;
+  if (h === '' && m === '') { msg('rH', '어제 사용 시간을 입력해 주세요. (안 썼다면 0)'); return $('rH').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  var mins = (+h || 0) * 60 + (+m || 0);
+  if (+m > 59) { msg('rH', '분은 0~59 사이로 입력해 주세요.'); return; }
+  if (mins > 1440) { msg('rH', '하루는 24시간까지예요. 다시 확인해 주세요.'); return; }
+  var pick = function(id){ return [].slice.call($(id).querySelectorAll('input:checked')).map(function(i){ return i.value; }); };
+  var fills = pick('rFills');
+  if (!fills.length){ msg('rFills', '하나 이상 골라 주세요. 없었다면 \'채운 활동이 없어요\'를 고릅니다.'); return $('rFills').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  var data = { token: (load(SKEY) || {}).token, date: tg, minutes: mins, practices: pick('rPractices'), fills: fills, note: $('rNote').value.trim(), share: $('rShare').checked };
+  if (photo){ data.photo = photo.full; data.thumb = photo.thumb; } else if (removePhoto) data.removePhoto = true;
+  var btn = $('btnSave'); busy(btn, true, photo ? '사진과 함께 저장하는 중…' : '저장하는 중…');
+  api('saveRecord', data).then(function(r){
+    busy(btn, false);
+    if (!r.ok){
+      if (r.code === 'SUSPENDED') return blocked(r.error);
+      if (r.code === 'LOGOUT'){ drop(SKEY); show('login'); return toast('다시 로그인해 주세요.'); }
+      $('recordErr').textContent = r.error; return;
+    }
+    setMe(r); saved(r.edited, mins);
+  });
+});
+function saved(edited, mins){
+  var n = ME.records.length;
+  $('svTitle').textContent = edited ? '기록을 고쳤어요!' : n >= 10 ? '완수 기준 달성! 🎉' : '오늘도 해냈어요!';
+  $('svDays').textContent = '기록 ' + n + '일째';
+  $('svText').textContent = n >= 10 ? '14일 중 10일을 채웠어요. 마무리 설문까지 하면 완수입니다!' : '완수까지 ' + (10 - n) + '일 남았어요. 어제는 ' + hm(mins) + ' 사용했어요.';
+  home(); show('saved');
 }
 function blocked(m){ drop(SKEY); $('blockedMsg').textContent = m || '운영자 확인이 필요한 계정입니다.'; show('blocked'); }
 $('btnLogout').onclick = function(){ drop(SKEY); show('welcome'); toast('로그아웃했습니다.'); };
@@ -421,9 +702,9 @@ function start(){
   var s = load(SKEY);
   if (!s || !s.token){ show('welcome'); return; }
   api('me', { token: s.token }).then(function(r){
-    if (r.ok){ s.user = r.user; save(SKEY, s); home(r.user); }
+    if (r.ok){ setMe(r); home(); }
     else if (r.code === 'SUSPENDED') blocked(r.error);
-    else if (r.net){ home(s.user); toast('오프라인 상태입니다. 연결되면 다시 확인합니다.'); } // 연결 문제로 로그아웃시키지 않는다
+    else if (r.net && s.user){ ME.user = s.user; ME.records = s.records || []; ME.period = s.period || null; home(); toast('오프라인 상태입니다. 연결되면 다시 확인합니다.'); } // 연결 문제로 로그아웃시키지 않는다
     else { drop(SKEY); show('welcome'); }
   });
 }
