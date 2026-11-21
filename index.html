@@ -410,6 +410,8 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 .post-photo{position:relative;display:block;width:100%;margin-top:14px;border:0;padding:0;border-radius:14px;overflow:hidden;aspect-ratio:4/3;background:var(--fill);cursor:zoom-in}
 .post-photo img{width:100%;height:100%;object-fit:cover;display:block}
 .post-photo .cnt{position:absolute;top:10px;right:10px;font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);border-radius:999px;padding:3px 9px}
+.post-del{margin-left:auto;border:1px solid var(--line);background:var(--surface);color:var(--red);font-size:13px;font-weight:600;border-radius:999px;padding:5px 12px;cursor:pointer;flex:none}
+.post-h .me+.post-del{margin-left:8px}
 .post .private{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;color:var(--ink2);background:var(--fill);border-radius:999px;padding:2px 8px;vertical-align:2px}
 #feedEmpty{margin:0 -20px;background:var(--surface)}
 
@@ -1275,6 +1277,20 @@ function postEl(it){
   el.querySelector('.post-title').textContent = title;
   if (body) el.querySelector('.post-body').textContent = body;
   if (n){ el.querySelector('.post-photo img').src = it.thumbs[0]; el.querySelector('.post-photo').onclick = function(){ openViewer(it, 0); }; }
+  if (it.notice && isAdmin()){ // 운영자만: 공지 삭제
+    var del = document.createElement('button'); del.type = 'button'; del.className = 'post-del'; del.textContent = '삭제';
+    del.onclick = function(){
+      ask('공지를 삭제할까요?', (it.note || '사진 공지').slice(0, 40) + '\n게시판에서 바로 사라지고, 사진은 드라이브 휴지통으로 옮겨져요.', '삭제', true).then(function(yes){
+        if (!yes) return; busy(del, true, '');
+        api('adminDeleteNotice', { atoken: atok(), id: it.id }).then(function(r){
+          if (!r.ok){ busy(del, false); if (!authFail(r)) toast(r.error); return; }
+          el.remove(); feedOff = Math.max(0, feedOff - 1); if (!$('feed').children.length) $('feedEmpty').hidden = false;
+          toast('공지를 삭제했어요');
+        });
+      });
+    };
+    el.querySelector('.post-h').appendChild(del);
+  }
   return el;
 }
 $('btnMore').onclick = function(){ loadBoard(false); };

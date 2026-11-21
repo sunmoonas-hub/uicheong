@@ -474,3 +474,17 @@ function dstr(v) {
   var m = /(\d{4})\D+(\d{1,2})\D+(\d{1,2})/.exec(String(v));
   return m ? m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2) : String(v).replace(/^'/, '');
 }
+
+/* 공지 삭제: 운영자만, 공지 글쓰기로 올린 글(ID가 ADMIN|P…)만 지운다. 사진은 드라이브 휴지통으로(30일 안에 되살릴 수 있음) */
+ACTIONS.adminDeleteNotice = function (r) {
+  if (!adminOk(r.atoken)) return DENY;
+  var id = String(r.id || '');
+  if (id.indexOf(ADMIN_ID + '|P') !== 0) return { ok: false, error: '공지 글만 삭제할 수 있습니다.' };
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var f = findRecord(id); if (!f) return { ok: false, error: '이미 삭제된 글입니다.' };
+    splitIds(f.row[R['사진ID']]).forEach(trashFile);
+    sheet(SHEET_R).deleteRow(f.index);
+  } finally { lock.releaseLock(); }
+  return { ok: true };
+};
