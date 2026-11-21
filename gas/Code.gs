@@ -570,3 +570,18 @@ ACTIONS.adminNotify = function (r) {
 };
 
 function alignThumbs(w) { var ids = splitIds(w[R['사진ID']]), th = String(w[R['썸네일']] || '').split('|'); return ids.map(function (_, i) { return th[i] && th[i].indexOf('data:image/jpeg;base64,') === 0 ? th[i] : ''; }); }
+
+/* 내 글 공개 설정: 본인 기록만 '공유'(공개 게시판에도 보임) ↔ '비공개'(내 글에만). 운영자가 숨긴 글은 본인이 다시 공개할 수 없다 */
+ACTIONS.setShare = function (r) {
+  var a = viewer(r); if (a.error) return a.error;
+  var me = a.admin ? ADMIN_ID : a.f.row[C.ID], id = String(r.id || '');
+  if (id.indexOf(ADMIN_ID + '|P') === 0) return { ok: false, error: '공지는 항상 공개돼요.' };
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var f = findRecord(id);
+    if (!f || f.row[R['사용자ID']] !== me) return { ok: false, error: '내 글만 바꿀 수 있어요.' };
+    if (f.row[R['공유']] === '숨김') return { ok: false, error: '운영자가 숨긴 글이라 공개할 수 없어요.' };
+    sheet(SHEET_R).getRange(f.index, R['공유'] + 1).setValue(r.share === true ? '공유' : '비공개');
+  } finally { lock.releaseLock(); }
+  return { ok: true, share: r.share === true ? '공유' : '비공개' };
+};

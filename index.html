@@ -418,6 +418,12 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 .post-photo .cnt{position:absolute;top:10px;right:10px;font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);border-radius:999px;padding:3px 9px}
 .post-del{margin-left:auto;border:1px solid var(--line);background:var(--surface);color:var(--red);font-size:13px;font-weight:600;border-radius:999px;padding:5px 12px;cursor:pointer;flex:none}
 .post-h .me+.post-del{margin-left:8px}
+.share-tg{display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;background:var(--surface)}
+.share-tg input{appearance:none;width:24px;height:24px;border-radius:7px;margin:0;flex:none;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;cursor:pointer}
+.share-tg input::after{content:'';width:10px;height:6px;border:solid #fff;border-width:0 0 2.5px 2.5px;transform:rotate(-45deg) translate(1px,-1px);opacity:0}
+.share-tg input:checked{background:var(--brand);border-color:var(--brand)}.share-tg input:checked::after{opacity:1}
+.share-tg:has(input:checked){border-color:var(--brand);background:var(--brand-soft)}
+.share-tg.dis{color:var(--sub);cursor:default}
 .post .private{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;color:var(--ink2);background:var(--fill);border-radius:999px;padding:2px 8px;vertical-align:2px}
 #feedEmpty{margin:0 -20px;background:var(--surface)}
 
@@ -1494,6 +1500,7 @@ function postEl(it){
   if (it.ava) el.querySelector('.ava img').src = it.ava;
   if (body) el.querySelector('.post-body').textContent = body;
   if (n) buildCarousel(el.querySelector('.post-photo'), it);
+  if (feedMode === 'mine' && it.mine && !it.notice) shareToggle(el, it); // '내 글' 탭: 공개 여부 체크
   if (it.notice && isAdmin()){ // 운영자만: 공지 삭제
     var del = document.createElement('button'); del.type = 'button'; del.className = 'post-del'; del.textContent = '삭제';
     del.onclick = function(){
@@ -1511,6 +1518,27 @@ function postEl(it){
   return el;
 }
 $('btnMore').onclick = function(){ loadBoard(false); };
+
+/* 내 글 공개 설정: 체크하면 의청 공개 게시판에도 보이고, 해제하면 공개 게시판에서만 빠진다(내 글에는 그대로) */
+function shareToggle(el, it){
+  var hidByAdmin = it.share === '숨김';
+  var lab = document.createElement('label'); lab.className = 'share-tg' + (hidByAdmin ? ' dis' : '');
+  lab.innerHTML = '<input type="checkbox"' + (it.share === '공유' ? ' checked' : '') + (hidByAdmin ? ' disabled' : '') + '><span>' + (hidByAdmin ? '운영자가 숨긴 글이에요' : '의청 공개 게시판에 공개') + '</span>';
+  var cb = lab.firstChild;
+  cb.onchange = function(){
+    var want = cb.checked; cb.disabled = true;
+    api('setShare', { token: tok(), atoken: atok(), id: it.id, share: want }).then(function(r){
+      cb.disabled = false;
+      if (!r.ok){ cb.checked = !want; if (!authFail(r)) toast(r.error); return; }
+      it.share = r.share;
+      var b = el.querySelector('.post-h b'), pv = b.querySelector('.private');
+      if (want && pv) pv.remove(); if (!want && !pv) b.insertAdjacentHTML('beforeend', '<span class="private">나만 보기</span>');
+      try { localStorage.removeItem(feedKey('all')); localStorage.removeItem(feedKey('mine')); } catch(e){} // 저장본을 비워 공개 게시판에 바로 반영
+      toast(want ? '의청 공개 게시판에 올렸어요' : '공개 게시판에서 내렸어요');
+    });
+  };
+  el.appendChild(lab);
+}
 
 /* 게시판 사진 슬라이드: 손가락으로 옆으로 밀면 다음 장(스크롤 스냅). 화면에 보이는 장만 원본을 받아 선명하게 바꾼다 */
 var FULL = {}; // 받은 원본(이 화면을 쓰는 동안만 기억)
