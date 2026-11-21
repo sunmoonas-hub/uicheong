@@ -407,8 +407,14 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 .post-h small{font-size:14px;margin-top:1px}
 .post-title{text-align:left;font-size:18px;font-weight:800;letter-spacing:-.025em;line-height:1.45;margin:14px 0 4px;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap}
 .post-body{font-size:15px;line-height:1.55;color:var(--ink2);margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.post-photo{position:relative;display:block;width:100%;margin-top:14px;border:0;padding:0;border-radius:14px;overflow:hidden;aspect-ratio:4/3;background:var(--fill);cursor:zoom-in}
-.post-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.post-photo{position:relative;display:block;width:100%;margin-top:14px;border-radius:14px;overflow:hidden;aspect-ratio:4/3;background:var(--fill)}
+.pcar{display:flex;width:100%;height:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+.pcar::-webkit-scrollbar{display:none}
+.pcar>button{flex:0 0 100%;height:100%;border:0;padding:0;background:var(--fill);scroll-snap-align:center;scroll-snap-stop:always;cursor:zoom-in}
+.pcar img{width:100%;height:100%;object-fit:cover;display:block}
+.pdots{position:absolute;left:0;right:0;bottom:10px;display:flex;gap:5px;justify-content:center;pointer-events:none}
+.pdots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 2px rgba(0,0,0,.3)}
+.pdots i.on{background:#fff;width:16px;border-radius:3px}
 .post-photo .cnt{position:absolute;top:10px;right:10px;font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);border-radius:999px;padding:3px 9px}
 .post-del{margin-left:auto;border:1px solid var(--line);background:var(--surface);color:var(--red);font-size:13px;font-weight:600;border-radius:999px;padding:5px 12px;cursor:pointer;flex:none}
 .post-h .me+.post-del{margin-left:8px}
@@ -1260,7 +1266,7 @@ function Picker(grid, file, clear, note){
   P.reset = function(list){ P.items = list || []; note.textContent = ''; P.render(); };
   P.payload = function(){
     return { keep: P.items.filter(function(x){ return x.old; }).map(function(x){ return x.idx; }),
-             photos: P.items.filter(function(x){ return !x.old; }).map(function(x){ return { full: x.full, thumb: x.thumb }; }) };
+             photos: P.items.filter(function(x){ return !x.old; }).map(function(x, i){ return { full: x.full, thumb: i === 0 && !P.items.some(function(y){ return y.old; }) ? x.big : x.thumb }; }) };
   };
   file.addEventListener('change', function(){
     var files = [].slice.call(this.files || []); this.value = '';
@@ -1275,10 +1281,13 @@ function Picker(grid, file, clear, note){
       img.onload = function(){
         try {
           // 시트 한 칸(5만 자)에 썸네일 4장이 들어가도록 장당 약 11KB 이하로 줄인다
-          var full = shrink(img, 1280, .8), th = shrink(img, 260, .6);
-          if (th.length > 11000) th = shrink(img, 220, .5);
-          if (th.length > 11500) th = shrink(img, 180, .45);
-          P.items.push({ full: full, thumb: th });
+          // 원본은 긴 변 1600px·품질 0.85(게시판에서 선명하게). 시트 한 칸(5만 자)에 미리보기가 들어가도록
+          // 첫 장은 큰 미리보기(약 22KB), 나머지는 작은 미리보기(약 8KB)를 쓴다
+          var full = shrink(img, 1600, .85);
+          if (full.length > 2800000) full = shrink(img, 1280, .8);
+          var th = shrink(img, 220, .55); if (th.length > 8500) th = shrink(img, 180, .45);
+          var big = shrink(img, 480, .7); if (big.length > 22000) big = shrink(img, 400, .6); if (big.length > 22000) big = th;
+          P.items.push({ full: full, thumb: th, big: big });
         } catch (e){ toast('처리하지 못한 사진이 있어요.'); }
         URL.revokeObjectURL(url); P.render(); next();
       };
@@ -1480,11 +1489,11 @@ function postEl(it){
     '<div class="post-h"><span class="ava">' + (it.ava ? '<img alt="">' : esc(String(it.nickname).charAt(0))) + '</span><div><b>' + esc(it.nickname) + (it.notice ? '<span class="op">운영자</span>' : '') +
     (it.mine && it.share && it.share !== '공유' ? '<span class="private">나만 보기</span>' : '') + '</b><small>' + when + '</small></div>' + (it.mine ? '<span class="me">나</span>' : '') + '</div>' +
     '<h4 class="post-title"></h4>' + (body ? '<p class="post-body"></p>' : '') +
-    (n ? '<button type="button" class="post-photo" aria-label="사진 크게 보기"><img alt="' + esc(it.nickname) + '님이 올린 사진" loading="lazy">' + (n > 1 ? '<span class="cnt">1/' + n + '</span>' : '') + '</button>' : '');
+    (n ? '<div class="post-photo"><div class="pcar"></div>' + (n > 1 ? '<span class="cnt">1/' + n + '</span><span class="pdots">' + new Array(n + 1).join('<i></i>') + '</span>' : '') + '</div>' : '');
   el.querySelector('.post-title').textContent = title;
   if (it.ava) el.querySelector('.ava img').src = it.ava;
   if (body) el.querySelector('.post-body').textContent = body;
-  if (n){ el.querySelector('.post-photo img').src = it.thumbs[0]; el.querySelector('.post-photo').onclick = function(){ openViewer(it, 0); }; }
+  if (n) buildCarousel(el.querySelector('.post-photo'), it);
   if (it.notice && isAdmin()){ // 운영자만: 공지 삭제
     var del = document.createElement('button'); del.type = 'button'; del.className = 'post-del'; del.textContent = '삭제';
     del.onclick = function(){
@@ -1503,20 +1512,60 @@ function postEl(it){
 }
 $('btnMore').onclick = function(){ loadBoard(false); };
 
+/* 게시판 사진 슬라이드: 손가락으로 옆으로 밀면 다음 장(스크롤 스냅). 화면에 보이는 장만 원본을 받아 선명하게 바꾼다 */
+var FULL = {}; // 받은 원본(이 화면을 쓰는 동안만 기억)
+var seen = 'IntersectionObserver' in window ? new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting){ seen.unobserve(e.target); e.target._load(); } }); }, { rootMargin: '200px' }) : null;
+function fullInto(img, it, i){
+  var key = it.id + '#' + i;
+  if (FULL[key]){ img.src = FULL[key]; return; }
+  if (!(it.photos > i) || img._busy) return; img._busy = true;
+  api('photo', { token: tok(), atoken: atok(), id: it.id, idx: i }).then(function(r){ img._busy = false; if (r.ok){ FULL[key] = r.src; img.src = r.src; } });
+}
+function buildCarousel(box, it){
+  var car = box.querySelector('.pcar'), n = it.thumbs.length, cnt = box.querySelector('.cnt'), dots = box.querySelectorAll('.pdots i');
+  it.thumbs.forEach(function(t, i){
+    var b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', '사진 ' + (i + 1) + '/' + n + ' 크게 보기');
+    b.innerHTML = '<img alt="' + esc(it.nickname) + '님이 올린 사진 ' + (i + 1) + '" loading="lazy" decoding="async">';
+    var img = b.firstChild; if (t) img.src = t;
+    b._load = function(){ fullInto(img, it, i); };
+    b.onclick = function(){ openViewer(it, i); };
+    car.appendChild(b);
+    if (i === 0){ if (seen) seen.observe(b); else b._load(); }
+  });
+  if (dots.length) dots[0].className = 'on';
+  var cur = 0;
+  car.addEventListener('scroll', function(){
+    var k = Math.round(car.scrollLeft / car.clientWidth); if (k === cur || k < 0 || k >= n) return; cur = k;
+    if (cnt) cnt.textContent = (k + 1) + '/' + n;
+    dots.forEach(function(d, j){ d.className = j === k ? 'on' : ''; });
+    car.children[k]._load();
+  }, { passive: true });
+}
+
 /* 사진 크게 보기: 썸네일을 먼저 띄우고, 원본은 서버에서 받아 바꿔 끼운다 */
 var viewerFor = null;
 var vItem = null;
 function openViewer(it, i){
   i = i || 0; var key = it.id + '#' + i, n = (it.thumbs || []).length; vItem = { it: it, i: i };
   $('vPrev').hidden = $('vNext').hidden = $('vCnt').hidden = n < 2; $('vCnt').textContent = (i + 1) + ' / ' + n;
-  viewerFor = key; $('viewerImg').src = it.thumbs[i]; $('viewerMsg').textContent = it.photos > i ? '원본을 불러오는 중…' : ''; $('viewer').hidden = false; $('viewerX').focus();
+  viewerFor = key; $('viewerImg').src = FULL[key] || it.thumbs[i] || '';
+  if (FULL[key]){ $('viewerMsg').textContent = ''; return; } $('viewerMsg').textContent = it.photos > i ? '원본을 불러오는 중…' : ''; $('viewer').hidden = false; $('viewerX').focus();
   if (!(it.photos > i)) return;
   api('photo', { token: tok(), atoken: atok(), id: it.id, idx: i }).then(function(r){
     if (viewerFor !== key || $('viewer').hidden) return;
-    if (r.ok){ $('viewerImg').src = r.src; $('viewerMsg').textContent = ''; } else $('viewerMsg').textContent = r.error;
+    if (r.ok){ FULL[key] = r.src; $('viewerImg').src = r.src; $('viewerMsg').textContent = ''; } else $('viewerMsg').textContent = r.error;
   });
 }
 function closeViewer(){ $('viewer').hidden = true; viewerFor = null; vItem = null; }
+(function(){ // 크게 보기에서도 손가락으로 밀면 넘기기
+  var x0 = null;
+  $('viewer').addEventListener('touchstart', function(e){ x0 = e.touches[0].clientX; }, { passive: true });
+  $('viewer').addEventListener('touchend', function(e){
+    if (x0 == null || !vItem) return; var dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) < 50 || vItem.it.thumbs.length < 2) return;
+    (dx < 0 ? $('vNext') : $('vPrev')).click();
+  });
+})();
 $('vPrev').onclick = function(e){ e.stopPropagation(); if (!vItem) return; var n = vItem.it.thumbs.length; openViewer(vItem.it, (vItem.i - 1 + n) % n); };
 $('vNext').onclick = function(e){ e.stopPropagation(); if (!vItem) return; var n = vItem.it.thumbs.length; openViewer(vItem.it, (vItem.i + 1) % n); };
 window.addEventListener('popstate', function(e){

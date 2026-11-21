@@ -126,7 +126,7 @@ var ACTIONS = {
       var w = v[o.i];
       return { id: w[R['기록ID']], nickname: w[R['닉네임']], team: w[R['팀']], date: dstr(w[R['기록일']]),
         fills: w[R['채움활동']] ? String(w[R['채움활동']]).split(' | ') : [], practices: w[R['실천']] ? String(w[R['실천']]).split(' | ').length : 0,
-        note: w[R['한줄기록']], thumbs: splitThumbs(w[R['썸네일']]), photos: splitIds(w[R['사진ID']]).length, mine: !!me && w[R['사용자ID']] === me, share: w[R['공유']], notice: o.n, ava: avas[w[R['사용자ID']]] || '', at: o.t };
+        note: w[R['한줄기록']], thumbs: alignThumbs(w), photos: splitIds(w[R['사진ID']]).length, mine: !!me && w[R['사용자ID']] === me, share: w[R['공유']], notice: o.n, ava: avas[w[R['사용자ID']]] || '', at: o.t };
     });
     return { ok: true, items: items, more: off + PAGE < list.length, total: list.length };
   },
@@ -568,3 +568,5 @@ ACTIONS.adminNotify = function (r) {
   addNotice('전체', title, body);
   return { ok: true };
 };
+
+function alignThumbs(w) { var ids = splitIds(w[R['사진ID']]), th = String(w[R['썸네일']] || '').split('|'); return ids.map(function (_, i) { return th[i] && th[i].indexOf('data:image/jpeg;base64,') === 0 ? th[i] : ''; }); }
