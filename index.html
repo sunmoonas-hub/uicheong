@@ -1396,8 +1396,8 @@ $('fAdmin').addEventListener('submit', function(e){
 $('btnAdminOut').onclick = function(){ setAtok(''); AD = null; show('welcome'); toast('관리자 모드에서 나왔어요'); };
 (CFG.TEAMS || []).forEach(function(t){ $('aTeam').add(new Option(t, t)); });
 $('aQ').addEventListener('input', renderAUsers); $('aTeam').addEventListener('change', renderAUsers);
-document.querySelectorAll('.seg button').forEach(function(b){ b.onclick = function(){
-  document.querySelectorAll('.seg button').forEach(function(x){ x.setAttribute('aria-selected', x === b); });
+document.querySelectorAll('#s-admin .seg button').forEach(function(b){ b.onclick = function(){ // 관리 화면의 칸만(게시판 탭 버튼을 가로채지 않게)
+  document.querySelectorAll('#s-admin .seg button').forEach(function(x){ x.setAttribute('aria-selected', x === b); });
   document.querySelectorAll('[data-segp]').forEach(function(p){ p.hidden = p.dataset.segp !== b.dataset.seg; });
 }; });
 function mmdd(s){ if (!s) return '–'; var p = s.split('-'); return +p[1] + '/' + +p[2]; }
