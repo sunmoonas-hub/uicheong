@@ -218,7 +218,8 @@ function sheet(n) { var ss = SpreadsheetApp.getActive(); return ss.getSheetByNam
 function str(v, max) { return String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max); }
 function ymd(d) { return Utilities.formatDate(d, TZ, 'yyyy-MM-dd'); }
 function pick(arr, allowed) { return (Array.isArray(arr) ? arr : []).filter(function (v, i, a) { return allowed.indexOf(v) >= 0 && a.indexOf(v) === i; }); }
-function cleanNick(v) { return String(v == null ? '' : v).normalize('NFC').trim(); }
+// normalize('NFC')는 쓰지 않는다: Apps Script V8에서 한글이 정규화 후 정규식([가-힣])에 맞지 않아 모든 한글 닉네임이 거절됐다(2026-11-21 실측). 화면에서 이미 NFC로 보낸다
+function cleanNick(v) { return String(v == null ? '' : v).trim(); }
 function nickError(n) {
   if (n.length < 2 || n.length > 10) return '닉네임은 2~10자로 정해 주세요.';
   if (!/^[가-힣a-zA-Z0-9_]+$/.test(n)) return '닉네임은 한글·영문·숫자·밑줄(_)만 쓸 수 있습니다.';
