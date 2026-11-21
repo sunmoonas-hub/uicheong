@@ -17,7 +17,7 @@
   --bg:#F2F4F6; --surface:#FFFFFF; --fill:#F2F4F6; --line:#E5E8EB;
   --ink:#191F28; --ink2:#4E5968; --sub:#8B95A1;
   --brand:#14A05A; --brand-press:#0F8A4C; --brand-soft:#E7F6EE; --brand-ink:#0B6B3B;
-  --sun:#FFB020; --red:#F04452; --red-soft:#FEECEE;
+  --poster:#2E9B3A; --sun:#FFB020; --red:#F04452; --red-soft:#FEECEE;
   --pot:#EEF1F4; --pot-rim:#E1E6EB;
   --r-lg:24px; --r-md:16px; --r-sm:12px;
   --ease:cubic-bezier(.2,.8,.2,1);
@@ -27,7 +27,7 @@
   :root{
     --bg:#101013; --surface:#1B1B1F; --fill:#26262B; --line:#2E2E34;
     --ink:#F3F4F6; --ink2:#C4C9D0; --sub:#8B929B;
-    --brand:#2DBE70; --brand-press:#25A862; --brand-soft:#15301F; --brand-ink:#7FE0A8;
+    --brand:#2DBE70; --poster:#45C25A; --brand-press:#25A862; --brand-soft:#15301F; --brand-ink:#7FE0A8;
     --red:#FF5B67; --red-soft:#3A1D21; --pot:#2A2A30; --pot-rim:#34343B;
     color-scheme:dark;
   }
@@ -83,6 +83,8 @@ h1,h2,h3{margin:0;font-weight:700}
 .hero .kicker{font-size:15px;font-weight:600;color:var(--brand-ink);margin:0 0 12px}
 .title{font-size:clamp(40px,12.5vw,52px);line-height:1.12;font-weight:800;letter-spacing:-.045em;margin:0;color:var(--ink)}
 .title span{display:block}
+/* 포스터처럼 '의'(의정부)와 '청'(교육지원청)만 초록으로: 이름 속 두 글자가 기관을 가리킨다는 걸 보여 준다 */
+.title em{font-style:normal;color:var(--poster)}
 .lead{font-size:16px;line-height:1.6;color:var(--ink2);margin:16px 0 0;max-width:11.5em}
 .mascot{position:absolute;right:-14px;bottom:-6px;width:min(52%,210px)}
 .ground{padding:8px 0 calc(20px + env(safe-area-inset-bottom))}
@@ -308,7 +310,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
   <section class="screen" id="s-welcome">
     <div class="hero">
       <p class="kicker">의청이와 함께하는</p>
-      <h1 class="title"><span>의좋은</span><span>폰프리</span><span>청 챌린지</span></h1>
+      <h1 class="title"><span><em>의</em>좋은</span><span>폰프리</span><span><em>청</em> 챌린지</span></h1>
       <p class="lead">2주 동안 폰을 잠시 내려놓고, 그 시간을 배움과 관계와 건강으로 채워 보세요.</p>
       <img class="mascot" src="assets/euicheong.png" alt="폰을 들고 웃는 새싹 캐릭터 의청이">
     </div>
