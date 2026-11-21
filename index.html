@@ -789,7 +789,6 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
       <button role="tab" data-feed="mine" aria-selected="true">내 글</button>
       <button role="tab" data-feed="all">의청 공개 게시판</button>
     </div>
-    <button class="btn pri" id="btnCompose" hidden style="margin-bottom:12px">공지 글쓰기</button>
     <div id="feed"></div>
     <div class="feed-empty" id="feedEmpty" hidden><p id="feedEmptyMsg"></p></div>
     <button class="btn sec" id="btnMore" hidden>더 보기</button>
@@ -801,7 +800,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
     <form id="fAdmin" novalidate>
       <h3 class="big-title">관리자 비밀번호를
 입력해 주세요</h3>
-      <p class="hint">운영자 계정 '의청이'로 참가자와 같은 화면을 둘러보고, 기록을 남겨 보고, 게시판에 공지를 올릴 수 있어요. 운영자 기록은 팀 참여율에 들어가지 않아요.</p>
+      <p class="hint">운영자 계정 '의청이'로 참가자와 같은 화면을 둘러보고, 기록을 남겨 볼 수 있어요. 운영자 기록은 팀 참여율에 들어가지 않아요.</p>
       <div class="pw"><input class="in" id="aPw" type="password" maxlength="64" placeholder="관리자 비밀번호" autocomplete="current-password" style="background:var(--surface)"><button type="button" class="eye" data-eye="aPw">보기</button></div>
       <div class="formerr" id="adminErr"></div>
       <div class="cta"><button class="btn pri" id="btnAdmin" type="submit">관리자 모드로 들어가기</button></div>
@@ -826,27 +825,6 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
       <div id="aDone"></div>
     </div>
     <button class="btn ghost" id="btnAdminOut">관리자 모드 나가기</button>
-  </section>
-
-  <!-- 공지 글쓰기 (운영자만) -->
-  <section class="screen" id="s-compose">
-    <div class="head"><button class="back" data-go="board" aria-label="뒤로">‹</button><h2>공지 글쓰기</h2></div>
-    <form id="fCompose" novalidate>
-      <div class="card">
-        <h3>내용</h3>
-        <p class="hint">게시판 맨 위에 '운영자' 표시와 함께 고정돼요.</p>
-        <textarea class="in" id="cNote" maxlength="300" placeholder="예: 내일부터 기록이 열려요! 오늘 하루 폰을 내려놓은 시간을 떠올려 보세요." style="min-height:140px"></textarea>
-        <div class="count"><span id="cCount">0</span>/300</div>
-      </div>
-      <div class="card">
-        <h3>사진 (선택, 최대 4장)</h3>
-        <input type="file" id="cFile" accept="image/*" multiple hidden>
-        <div class="pgrid" id="cGrid"></div>
-        <div class="photo-note" id="cNoteMsg"></div>
-        <button type="button" class="btn danger pclear" id="cClear" hidden>사진 모두 삭제</button>
-      </div>
-      <div class="cta"><div class="formerr" id="composeErr"></div><button class="btn pri" id="btnPost" type="submit">게시판에 올리기</button></div>
-    </form>
   </section>
 
   <!-- 알림 -->
@@ -1019,8 +997,6 @@ function show(name, opt){
   if (name === 'signup') goStep(0);
   var tabbed = TABS.indexOf(name) >= 0; $('tabbar').hidden = !tabbed;
   document.querySelectorAll('.tabbar button').forEach(function(b){ if (b.dataset.tab === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
-  // 관리자 모드에서는 개인 기록이 없으니 홈 대신 관리 탭
-  $('btnCompose').hidden = !isAdmin();
   if (name === 'board') loadBoard(true);
   if (name === 'stats') openStats();
   if (name === 'my') renderMy();
@@ -1267,7 +1243,7 @@ var FILLS = [{ v: 'R 독서', l: 'R', t: '독서', pic: 'read' }, { v: 'A 예술
 var PIC = {}; FILLS.forEach(function(o){ PIC[o.v] = o.pic; }); // 채운 활동 → 의청이 그림
 var NONE = '못 했어요';
 var editing = null;
-/* 사진 고르기(최대 4장): 기록하기와 공지 글쓰기가 함께 쓴다.
+/* 사진 고르기(최대 4장): 기록하기에서 쓴다.
  * items: { old:true, idx, thumb } 이미 올린 사진 / { full, thumb } 새로 고른 사진 */
 var MAXP = 4;
 function Picker(grid, file, clear, note){
@@ -1691,9 +1667,8 @@ window.addEventListener('popstate', function(e){
   }
   var s = st.s, inApp = !!(ME.user && tok());
   if (inApp && /^(welcome|login|signup|adminlogin|blocked)$/.test(s)){ history.back(); return; } // 로그인한 뒤에는 가입·로그인 화면을 건너뛴다
-  if (!inApp && /^(home|board|stats|my|noti|record|saved|compose|admin)$/.test(s)){ history.back(); return; }
+  if (!inApp && /^(home|board|stats|my|noti|record|saved|admin)$/.test(s)){ history.back(); return; }
   if (s === 'saved' || (s === 'record' && !target())) s = 'home';
-  if (s === 'compose' && !isAdmin()) s = 'board';
   if (s === 'signup'){ show('signup', { pop: true }); goStep(st.step || 0, true); return; }
   if (s === 'home') home({ pop: true }); else show(s, { pop: true });
 });
@@ -1836,25 +1811,6 @@ $('aCsv').onclick = function(){
   var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })); // BOM: 엑셀에서 한글이 깨지지 않게
   a.download = '폰프리청챌린지_완수자_' + fmt(new Date()) + '.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
 };
-
-/* ---------- 공지 글쓰기(운영자) ---------- */
-var cPick = Picker($('cGrid'), $('cFile'), $('cClear'), $('cNoteMsg'));
-$('btnCompose').onclick = function(){ $('cNote').value = ''; $('cCount').textContent = 0; cPick.reset([]); $('composeErr').textContent = ''; show('compose'); };
-$('cNote').addEventListener('input', function(){ $('cCount').textContent = this.value.length; });
-$('fCompose').addEventListener('submit', function(e){
-  e.preventDefault(); $('composeErr').textContent = '';
-  var note = $('cNote').value.trim();
-  var pp = cPick.payload();
-  if (!note && !pp.photos.length){ $('composeErr').textContent = '내용이나 사진을 넣어 주세요.'; return; }
-  var data = { atoken: atok(), note: note, photos: pp.photos };
-  var btn = $('btnPost'); busy(btn, true, '올리는 중…');
-  api('adminPost', data).then(function(r){
-    busy(btn, false);
-    if (!r.ok){ if (!authFail(r)) $('composeErr').textContent = r.error; return; }
-    try { localStorage.removeItem(feedKey('mine')); localStorage.removeItem(feedKey('all')); } catch(e){}
-    history.back(); toast('공지를 올렸어요'); // 글쓰기 화면을 닫고 게시판으로(게시판은 다시 불러옴)
-  });
-});
 
 /* ---------- 알림: 운영자가 보낸 알림 + 시스템 알림. 마지막으로 본 시각보다 새 알림이 있으면 종에 빨간 점 ---------- */
 var NOTI = [], NSEEN = 'pfNotiSeen';

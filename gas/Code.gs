@@ -446,21 +446,7 @@ function adminUser() {
   return findById(ADMIN_ID);
 }
 
-/* 공지 글쓰기: 운영자만, 날짜·횟수 제한 없이 게시판에 올린다(기록 일수에는 들어가지 않음) */
-ACTIONS.adminPost = function (r) {
-  if (!adminOk(r.atoken)) return DENY;
-  var note = str(r.note, 300);
-  if (!note && !(r.photos && r.photos.length)) return { ok: false, error: '내용이나 사진을 넣어 주세요.' };
-  var up = uploadPhotos(r.photos, 'notice_' + Date.now());
-  if (up.error) return { ok: false, error: up.error };
-  var f = adminUser(), now = new Date(), row = [];
-  row[R['기록ID']] = ADMIN_ID + '|P' + now.getTime(); row[R['사용자ID']] = ADMIN_ID; row[R['성명']] = '운영자'; row[R['닉네임']] = f.row[C['닉네임']]; row[R['팀']] = '운영자';
-  row[R['기록일']] = "'" + ymd(now); row[R['사용시간(분)']] = ''; row[R['실천']] = ''; row[R['채움활동']] = ''; row[R['한줄기록']] = note;
-  row[R['사진ID']] = up.ids.join(','); row[R['공유']] = '공유'; row[R['저장시각']] = now; row[R['수정시각']] = ''; row[R['썸네일']] = up.thumbs.join('|'); row[R['카드ID']] = up.cards.join(',');
-  sheet(SHEET_R).appendRow(row);
-  addNotice('전체', '새 공지가 올라왔어요', note ? note.slice(0, 80) : '사진 공지를 확인해 주세요.');
-  return { ok: true };
-};
+/* 공지 글쓰기는 없앴다(2026-11-22, 운영자 요청). 이미 올린 공지는 게시판에 남고 adminDeleteNotice로 지울 수 있다. 참가자에게 전할 말은 알림(adminNotify)으로 보낸다. */
 
 /* ===================== 사진 여러 장(최대 4장) =====================
  * 사진ID 칸은 'id1,id2', 썸네일 칸은 'data:…|data:…'로 같은 순서로 둔다.

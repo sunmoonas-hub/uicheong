@@ -101,18 +101,15 @@ tr.off td{color:var(--sub)}
 
 /* 글쓰기 */
 .wf{max-width:560px}
-.wf label{display:block;font-size:14px;font-weight:600;margin:16px 0 8px}.wf label:first-child{margin-top:0}
+.wf label{display:block;font-size:14px;font-weight:600;margin:16px 0 8px}
 .wf .opt{color:var(--sub);font-weight:400}
-.wf #wTitleBox label{margin-top:16px}
 .wf .note{margin:8px 2px 0}
-.sel{appearance:none;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238B95A1' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;cursor:pointer}
 .ta{height:auto;min-height:140px;padding:14px 16px;line-height:1.55;resize:vertical;font-family:inherit}
 .wf .cnt{text-align:right;color:var(--sub);font-size:12px;margin-top:4px;font-variant-numeric:tabular-nums}
-.wgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.wgrid>*{position:relative;aspect-ratio:1;border-radius:var(--r-md);overflow:hidden;background:var(--fill)}
-.wgrid img{width:100%;height:100%;object-fit:cover;display:block}
-.wgrid .x{position:absolute;top:4px;right:4px;width:26px;height:26px;border:0;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:15px;line-height:26px;padding:0;cursor:pointer}
-.wgrid .add{border:1.5px dashed var(--line);color:var(--sub);font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.nlist .n{padding:14px 0;border-bottom:1px solid var(--line)}.nlist .n:last-child{border-bottom:0;padding-bottom:0}
+.nlist .n b{display:block;font-size:15px}
+.nlist .n p{margin:4px 0 0;font-size:14px;color:var(--ink2);white-space:pre-wrap}
+.nlist .n small{display:block;margin-top:6px;color:var(--sub);font-size:12px;font-variant-numeric:tabular-nums}
 .wf .btn.lg{margin-top:18px}
 
 /* 확인 창: 브라우저 confirm 대신(모바일·자동화에서 막히지 않도록) */
@@ -149,7 +146,7 @@ tr.off td{color:var(--sub)}
       <button role="tab" data-tab="users">참가자</button>
       <button role="tab" data-tab="done">완수자</button>
       <button role="tab" data-tab="posts">게시글</button>
-      <button role="tab" data-tab="write">글쓰기</button>
+      <button role="tab" data-tab="write">알림</button>
     </div>
 
     <section data-panel="sum">
@@ -181,21 +178,20 @@ tr.off td{color:var(--sub)}
 
     <section data-panel="write" hidden>
       <form class="card wf" id="fWrite">
-        <label for="wKind">종류</label>
-        <select class="in sel" id="wKind"><option value="notice">공지사항</option><option value="alert">알림</option></select>
-        <p class="note" id="wHelp"></p>
-        <div id="wTitleBox" hidden><label for="wTitle">제목</label><input class="in" id="wTitle" maxlength="60" placeholder="예: 내일은 기록 마감일이에요"></div>
-        <label for="wBody">내용</label>
-        <textarea class="in ta" id="wBody" maxlength="300" placeholder="참가자에게 전할 내용을 적어 주세요."></textarea>
-        <div class="cnt"><span id="wCnt">0</span>/<span id="wMax">300</span></div>
-        <div id="wPhotoBox">
-          <label>사진 <span class="opt">(선택, 최대 4장)</span></label>
-          <div class="wgrid" id="wGrid"></div>
-          <input type="file" id="wFile" accept="image/*" multiple hidden>
-        </div>
+        <h3>알림 보내기</h3>
+        <p class="note">참가자 모두의 종 모양 알림에 뜹니다. 게시판에는 올라가지 않습니다.</p>
+        <label for="wTitle">제목</label><input class="in" id="wTitle" maxlength="60" placeholder="예: 내일은 기록 마감일이에요">
+        <label for="wBody">내용 <span class="opt">(선택)</span></label>
+        <textarea class="in ta" id="wBody" maxlength="500" placeholder="알림을 눌렀을 때 보이는 내용입니다."></textarea>
+        <div class="cnt"><span id="wCnt">0</span>/500</div>
         <div class="err" id="wErr"></div>
-        <button class="btn pri lg" id="btnWrite" type="submit">공지 올리기</button>
+        <button class="btn pri lg" id="btnWrite" type="submit">알림 보내기</button>
       </form>
+      <div class="card">
+        <h3>보낸 알림</h3>
+        <p class="note">참가자 모두에게 간 알림입니다. 최근 것부터 보입니다.</p>
+        <div class="nlist" id="nList"></div>
+      </div>
     </section>
   </main>
 </div>
@@ -254,6 +250,7 @@ function tab(name){
   document.querySelectorAll('.tabs button').forEach(function(b){ b.setAttribute('aria-selected', b.dataset.tab === name); });
   document.querySelectorAll('[data-panel]').forEach(function(p){ p.hidden = p.dataset.panel !== name; });
   if (name === 'posts' && !$('posts').children.length) loadPosts(true);
+  if (name === 'write') loadNoti();
 }
 
 /* ---------- 데이터 ---------- */
@@ -353,61 +350,30 @@ function loadPosts(reset){
 }
 $('btnMore').onclick = function(){ loadPosts(false); };
 
-/* ---------- 글쓰기: 공지사항(게시판에 올라가고 알림도 감) / 알림(종 알림에만 감) ---------- */
-var W = { photos: [] };
-var KIND = { notice: { max: 300, btn: '공지 올리기', help: '의청 공개 게시판에 의청이 이름의 공지로 올라가고, 참가자 모두에게 "새 공지가 올라왔어요" 알림이 갑니다.' },
-             alert: { max: 500, btn: '알림 보내기', help: '게시판에는 올라가지 않고, 참가자 모두의 종 모양 알림에만 뜹니다.' } };
-function wKind(){
-  var k = KIND[$('wKind').value], isN = $('wKind').value === 'notice';
-  $('wTitleBox').hidden = isN; $('wPhotoBox').hidden = !isN; $('wHelp').textContent = k.help; $('btnWrite').textContent = k.btn;
-  $('wBody').maxLength = k.max; $('wMax').textContent = k.max; $('wBody').placeholder = isN ? '참가자에게 전할 내용을 적어 주세요.' : '알림을 눌렀을 때 보이는 내용입니다. (선택)';
-  if ($('wBody').value.length > k.max) $('wBody').value = $('wBody').value.slice(0, k.max);
-  $('wCnt').textContent = $('wBody').value.length; $('wErr').textContent = '';
-}
-$('wKind').addEventListener('change', wKind);
+/* ---------- 알림: 보내기와 보낸 알림 목록 ---------- */
 $('wBody').addEventListener('input', function(){ $('wCnt').textContent = this.value.length; $('wErr').textContent = ''; });
 $('wTitle').addEventListener('input', function(){ $('wErr').textContent = ''; });
-function shrink(img, max, q){
-  var s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-  var c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
-  var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
-  return c.toDataURL('image/jpeg', q);
+function when(t){ if (!t) return ''; var d = new Date(t); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+function loadNoti(){
+  $('nList').innerHTML = '<p class="empty">불러오는 중…</p>';
+  api('notifications').then(function(r){
+    if (!r.ok){ $('nList').innerHTML = '<p class="empty">' + esc(r.error) + '</p>'; return; }
+    $('nList').innerHTML = r.items.length ? r.items.map(function(n){ return '<div class="n"><b>' + esc(n.title) + '</b>' + (n.body ? '<p>' + esc(n.body) + '</p>' : '') + '<small>' + when(n.at) + ' · ' + esc(n.from) + '</small></div>'; }).join('') : '<p class="empty">아직 보낸 알림이 없습니다.</p>';
+  });
 }
-function wGrid(){
-  var g = $('wGrid'); g.innerHTML = '';
-  W.photos.forEach(function(p, i){ var d = document.createElement('div'); d.innerHTML = '<img alt="첨부 사진 ' + (i + 1) + '"><button type="button" class="x" aria-label="사진 ' + (i + 1) + ' 빼기">×</button>'; d.firstChild.src = p.thumb;
-    d.lastChild.onclick = function(){ W.photos.splice(i, 1); wGrid(); }; g.appendChild(d); });
-  if (W.photos.length < 4){ var a = document.createElement('button'); a.type = 'button'; a.className = 'add'; a.setAttribute('aria-label', '사진 넣기'); a.textContent = '+'; a.onclick = function(){ $('wFile').click(); }; g.appendChild(a); }
-}
-$('wFile').addEventListener('change', function(){
-  var files = [].slice.call(this.files, 0, 4 - W.photos.length); this.value = '';
-  files.forEach(function(f){ var u = URL.createObjectURL(f), img = new Image();
-    img.onload = function(){ // 참가자 기록과 같은 크기 규칙(원본 1600px, 게시판용 720px, 시트 칸에 들어갈 미리보기)
-      var full = shrink(img, 1600, .85); if (full.length > 2800000) full = shrink(img, 1280, .8);
-      var th = shrink(img, 220, .55); if (th.length > 8500) th = shrink(img, 180, .45);
-      var big = shrink(img, 480, .7); if (big.length > 22000) big = shrink(img, 400, .6); if (big.length > 22000) big = th;
-      var card = shrink(img, 720, .72); if (card.length > 400000) card = shrink(img, 640, .62);
-      URL.revokeObjectURL(u); if (W.photos.length < 4){ W.photos.push({ full: full, thumb: th, big: big, card: card }); wGrid(); } };
-    img.onerror = function(){ URL.revokeObjectURL(u); toast('이 사진은 열 수 없어요'); }; img.src = u; });
-});
 $('fWrite').addEventListener('submit', function(e){
   e.preventDefault();
-  var isN = $('wKind').value === 'notice', body = $('wBody').value.trim(), title = $('wTitle').value.trim();
-  if (isN && !body && !W.photos.length){ $('wErr').textContent = '내용이나 사진을 넣어 주세요.'; return $('wBody').focus(); }
-  if (!isN && !title){ $('wErr').textContent = '알림 제목을 입력해 주세요.'; return $('wTitle').focus(); }
-  ask(isN ? '공지를 올릴까요?' : '알림을 보낼까요?', '참가자 모두에게 ' + (isN ? '게시판 공지와 알림이 갑니다.' : '알림이 갑니다.') + '\n' + (isN ? body.slice(0, 80) : title), isN ? '올리기' : '보내기').then(function(yes){
+  var body = $('wBody').value.trim(), title = $('wTitle').value.trim();
+  if (!title){ $('wErr').textContent = '알림 제목을 입력해 주세요.'; return $('wTitle').focus(); }
+  ask('알림을 보낼까요?', '참가자 모두에게 알림이 갑니다.\n' + title, '보내기').then(function(yes){
     if (!yes) return;
-    var b = $('btnWrite'), label = b.textContent; b.disabled = true; b.innerHTML = '<span class="spin"></span>' + (isN ? '올리는 중' : '보내는 중');
-    var req = isN ? api('adminPost', { note: body, photos: W.photos.map(function(p, i){ return { full: p.full, card: p.card, thumb: i === 0 ? p.big : p.thumb }; }) })
-                  : api('adminNotify', { title: title, body: body });
-    req.then(function(r){ b.disabled = false; b.textContent = label;
+    var b = $('btnWrite'); b.disabled = true; b.innerHTML = '<span class="spin"></span>보내는 중';
+    api('adminNotify', { title: title, body: body }).then(function(r){ b.disabled = false; b.textContent = '알림 보내기';
       if (!r.ok){ $('wErr').textContent = r.error; return; }
-      $('wBody').value = ''; $('wTitle').value = ''; W.photos = []; wGrid(); wKind();
-      toast(isN ? '공지를 올렸어요' : '알림을 보냈어요'); if (isN) $('posts').innerHTML = ''; // 게시글 탭을 다시 열면 새로 불러오게
+      $('wBody').value = ''; $('wTitle').value = ''; $('wCnt').textContent = 0; toast('알림을 보냈어요'); loadNoti();
     });
   });
 });
-wKind(); wGrid();
 document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !$('modal').hidden) $('mNo').click(); });
 
 if (tok()) enter(); else { $('fLogin').hidden = false; $('pw').focus(); }
