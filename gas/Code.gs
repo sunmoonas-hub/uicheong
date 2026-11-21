@@ -230,7 +230,17 @@ function settings() {
   c.put('settings', JSON.stringify(o), 60); // 설정을 바꾸면 최대 1분 뒤 반영
   return o;
 }
-function period() { var s = settings(); return { start: s['시작일'] || '2026-11-23', end: s['종료일'] || '2026-12-06' }; }
+function period() {
+  var s = settings();
+  if (!('마무리설문' in s)) { // 포스터 ③ 마무리 설문: 설정 탭에 주소·기간 칸이 없으면 한 번 만들어 둔다
+    var sh = sheet(SHEET_S);
+    sh.appendRow(['마무리설문', '', '마무리 설문 주소(구글 설문 등). 넣으면 앱 홈에 설문 참여 버튼이 생깁니다.']);
+    sh.appendRow(['설문시작', "'2026-12-07", '마무리 설문 시작일']);
+    sh.appendRow(['설문종료', "'2026-12-09", '마무리 설문 마지막 날']);
+    CacheService.getScriptCache().remove('settings'); s = settings();
+  }
+  return { start: s['시작일'] || '2026-11-23', end: s['종료일'] || '2026-12-06', survey: s['마무리설문'] || '', sStart: s['설문시작'] || '2026-12-07', sEnd: s['설문종료'] || '2026-12-09' };
+}
 function codeOk(code) {
   if (tooMany('code')) { Utilities.sleep(1500); return false; }
   var want = String(settings()['참여코드'] || '').trim(), got = String(code || '').trim();

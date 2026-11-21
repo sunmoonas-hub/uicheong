@@ -492,6 +492,58 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 .sv-pic[hidden]{display:none}
 @keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
 
+/* ===== 포스터 색: 크림 바탕, 짙은 남색 글자, 청록 주색, 배움(파랑)·관계(주황)·건강(초록), 칸마다 옅은 색 ===== */
+:root{
+  --bg:#FBF7EE; --surface:#FFFFFF; --fill:#F5F0E6; --line:#E9E2D4;
+  --ink:#17324D; --ink2:#47586B; --sub:#8A929C;
+  --brand:#127A60; --brand-press:#0D6450; --brand-soft:#E4F2EA; --brand-ink:#0C5C49;
+  --poster:#3A9A3E; --orange:#F08A24; --blue:#2F6FD6; --purple:#7B5CC4; --pink:#E25C6A;
+  --t-blue:#E8F1FB; --t-green:#EDF6E1; --t-peach:#FDEEDF; --t-purple:#F1ECFA; --t-pink:#FDECEE;
+  --pot:#F1ECE2; --pot-rim:#E6DFD1;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#11161B; --surface:#1A2128; --fill:#232B33; --line:#2E3842;
+    --ink:#EEF2F6; --ink2:#C3CCD5; --sub:#8D97A2;
+    --brand:#2FB58E; --brand-press:#27A07D; --brand-soft:#16302A; --brand-ink:#8FE3C4;
+    --t-blue:#1C2A3B; --t-green:#1F2B1C; --t-peach:#33261B; --t-purple:#28223A; --t-pink:#36202A;
+    --pot:#2A323A; --pot-rim:#343D46;
+  }
+}
+.c-blue{color:var(--blue)}.c-orange{color:var(--orange)}.c-green{color:var(--poster)}
+.lead b{font-weight:800}
+.hero .kicker{color:var(--poster)}
+.dday strong{color:var(--orange)}
+.tabbar button[aria-current="page"] svg{stroke:var(--brand)}
+/* 실천 칸·홈 실천 줄: 포스터의 청에서(파랑)·함께(초록)·집에서(살구)·다짐(보라) */
+.check .ico{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:17px;flex:none}
+.check.t-blue .ico,.prac.t-blue .pi{background:var(--t-blue)}
+.check.t-green .ico,.prac.t-green .pi{background:var(--t-green)}
+.check.t-peach .ico,.prac.t-peach .pi{background:var(--t-peach)}
+.check.t-purple .ico{background:var(--t-purple)}
+.check.on .ico{background:rgba(255,255,255,.18)}
+.prac{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line);font-size:15px;color:var(--ink2)}
+.prac:first-of-type{border-top:0;padding-top:8px}
+.prac .pi{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:18px;flex:none}
+.prac em{display:block;font-style:normal;font-weight:800;font-size:15px}
+.prac.t-blue em{color:var(--blue)}.prac.t-green em{color:var(--poster)}.prac.t-peach em{color:var(--orange)}
+.prac small{display:block;font-size:13px;color:var(--sub);margin-top:1px}
+.except{font-size:12px;color:var(--sub);margin:10px 0 0}
+/* 채운 활동 칸: 배움(파랑)·건강(초록)·관계(주황) 옅은 바탕 */
+.tile:nth-child(1){background:var(--t-blue)}.tile:nth-child(2){background:var(--t-purple)}.tile:nth-child(3){background:var(--t-green)}.tile:nth-child(4){background:var(--t-peach)}
+.tile.on{background:var(--brand)!important}
+/* 홈 ①②③: 포스터의 청록·초록·주황 번호 */
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.steps3[hidden]{display:none}
+.st{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 8px;text-align:center}
+.st i{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;color:#fff;font-style:normal;font-weight:800;font-size:15px}
+.st1 i{background:#1C7C7D}.st2 i{background:var(--poster)}.st3 i{background:var(--orange)}
+.st b{display:block;font-size:14px;font-weight:800;margin-top:6px}
+.st small{display:block;font-size:12px;color:var(--sub);margin-top:2px;font-variant-numeric:tabular-nums}
+.st.done{border-color:var(--brand)}
+.st.now{border-color:var(--orange);background:var(--t-peach)}
+.s3btn{display:inline-flex;margin-top:6px;min-height:32px;padding:0 10px;font-size:12px;background:var(--orange);color:#fff;border-radius:10px;text-decoration:none}
+
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:rgba(25,31,40,.92);color:#fff;padding:12px 20px;border-radius:999px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s,transform .3s var(--ease);max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:10;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .toast.on{opacity:1;transform:translateX(-50%)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -509,7 +561,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
     <div class="hero">
       <p class="kicker">의청이와 함께하는</p>
       <h1 class="title"><span><em>의</em>좋은</span><span>폰프리 <em>청</em> 챌린지</span></h1>
-      <p class="lead">2주 동안 폰을 잠시 내려놓고, 그 시간을 배움과 관계와 건강으로 채워 보세요.</p>
+      <p class="lead">2주 동안 폰을 잠시 내려놓고, 그 시간을 <b class="c-blue">배움</b>·<b class="c-orange">관계</b>·<b class="c-green">건강</b>으로 채워 보세요.</p>
       <img class="mascot" src="assets/euicheong.png" alt="폰을 들고 웃는 새싹 캐릭터 의청이">
     </div>
     <div class="ground">
@@ -625,6 +677,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
     </div>
     <div class="home-body">
       <button class="btn pri recbtn" id="btnRecord">기록하기</button>
+      <div class="steps3" id="steps3"></div>
       <div class="card">
         <div class="prog"><h3>14일 기록판</h3><small>완수는 10일</small></div>
         <div class="bar"><i id="pBar"></i></div>
@@ -641,9 +694,10 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
       </div>
       <div class="card">
         <h3>함께 지키는 폰프리 청 실천</h3>
-        <div class="pledge"><span>📵</span><span><em>청에서</em> 회의 중 폰은 내려놓기</span></div>
-        <div class="pledge"><span>👥</span><span><em>함께</em> 동료와 폰 없이 점심 산책, 폰 대신 먼저 인사</span></div>
-        <div class="pledge"><span>🌙</span><span><em>집에서</em> 잠들 땐 폰은 침대 밖 정해진 자리에</span></div>
+        <div class="prac t-blue"><span class="pi">📵</span><span><em>청에서</em>회의 중 폰은 내려놓기<small>뒤집어 두거나 바구니에 두기</small></span></div>
+        <div class="prac t-green"><span class="pi">👥</span><span><em>함께</em>동료와 폰 없이 점심 산책, 폰 대신 먼저 인사<small>게시판에 실천 나누기</small></span></div>
+        <div class="prac t-peach"><span class="pi">🌙</span><span><em>집에서</em>잠들 땐 폰은 침대 밖 정해진 자리에<small>숙면과 자기조절의 시작</small></span></div>
+        <p class="except">※ 민원 응대, 매일 업무 등 업무상 필요한 사용은 예외예요.</p>
       </div>
       <button class="btn ghost" id="btnDemoSuspend" hidden>데모: 이 계정을 정지 상태로 바꿔 보기</button>
     </div>
@@ -682,7 +736,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
         <div class="pgrid" id="rGrid"></div>
         <div class="photo-note" id="rPhotoNote"></div>
         <button type="button" class="btn danger pclear" id="rClear" hidden>사진 모두 삭제</button>
-        <label class="agree" style="font-weight:600;font-size:14px"><input type="checkbox" id="rShare" checked> 한 줄 기록과 사진을 닉네임으로 공개 게시판에 업로드하기</label>
+        <label class="agree" style="font-weight:600;font-size:14px"><input type="checkbox" id="rShare" checked> 한 줄 기록과 사진을 닉네임으로 의청 공개 게시판에 업로드하기</label>
       </div>
       <div class="cta"><div class="formerr" id="recordErr"></div><button class="btn pri" id="btnSave" type="submit">기록 저장하기</button></div>
     </form>
@@ -704,8 +758,8 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
   <section class="screen tabbed" id="s-board">
     <h1 class="page-title">게시판</h1>
     <div class="seg" role="tablist" id="feedSeg">
-      <button role="tab" data-feed="all" aria-selected="true">의청 게시판</button>
       <button role="tab" data-feed="mine">내 글</button>
+      <button role="tab" data-feed="all" aria-selected="true">의청 공개 게시판</button>
     </div>
     <button class="btn pri" id="btnCompose" hidden style="margin-bottom:12px">공지 글쓰기</button>
     <div id="feed"></div>
@@ -1131,10 +1185,31 @@ function home(opt){
   else { b.disabled = true; b.className = 'btn pri recbtn'; b.textContent = t <= st ? md(fmt(new Date(st.getTime() + DAY))) + '부터 기록할 수 있어요' : '기록 기간이 끝났어요'; }
   $('btnDemoSuspend').hidden = !DEMO;
   show('home', opt);
+  renderSteps();
   loadMyPosts(); checkNoti();
 }
+/* 포스터의 ① 참가 신청 → ② 매일 기록 → ③ 마무리 설문 */
+function renderSteps(){
+  var p = per(), t = fmt(today()), n = ME.records.length, ss = p.sStart || '2026-12-07', se = p.sEnd || '2026-12-09';
+  var open = t >= ss && t <= se, url = p.survey || '';
+  var s3 = open ? (url ? '<a class="btn sm s3btn" href="' + esc(url) + '" target="_blank" rel="noopener">설문 참여하기</a>' : '<small>설문 주소는 메신저로 안내돼요</small>')
+                : '<small>' + md(ss).replace(/\(.\)/, '') + '~' + md(se).replace(/\(.\)/, '') + '</small>';
+  $('steps3').innerHTML =
+    '<div class="st st1 done"><i>1</i><b>참가 신청</b><small>완료</small></div>' +
+    '<div class="st st2' + (n >= 10 ? ' done' : '') + '"><i>2</i><b>매일 기록</b><small>' + n + '/10일</small></div>' +
+    '<div class="st st3' + (open ? ' now' : '') + '"><i>3</i><b>마무리 설문</b>' + s3 + '</div>';
+  $('steps3').hidden = !!(ME.user && ME.user.admin);
+}
 function loadMyPosts(){
+  var c = load(feedKey('mine')); if (c && c.items) paintMyPosts(c);
   api('board', { token: tok(), atoken: atok(), offset: 0, mine: true }).then(function(r){
+    if (r.ok) save(feedKey('mine'), { ok: true, items: r.items, more: r.more });
+    if (!r.ok && c) return; paintMyPosts(r);
+  });
+  setTimeout(prefetchBoard, 800); // 공개 게시판도 미리 받아 두어 탭을 누르면 바로 뜨게
+}
+function paintMyPosts(r){
+  (function(){
     var box = $('myPosts'); if (!r.ok){ box.innerHTML = '<p class="my-empty">불러오지 못했어요.</p>'; return; }
     if (!r.items.length){ box.innerHTML = '<p class="my-empty">아직 올린 글이 없어요. 기록하면 여기에 보여요.</p>'; $('myMore').hidden = true; return; }
     $('myMore').hidden = false; box.innerHTML = '';
@@ -1146,16 +1221,16 @@ function loadMyPosts(){
       row.onclick = function(){ setFeed('mine'); show('board'); };
       box.appendChild(row);
     });
-  });
+  })();
 }
 $('myMore').onclick = function(){ setFeed('mine'); show('board'); };
 function hm(m){ var h = Math.floor(m / 60), r = m % 60; return (h ? h + '시간 ' : '') + (r || !h ? r + '분' : ''); }
 
 /* ---------- 기록하기 ---------- */
 var PRACTICES = [ // Code.gs의 PRACTICES와 글자까지 같아야 한다
-  { v: '회의 중 폰 내려놓기', ico: '📵', sub: '청에서 · 뒤집어 두거나 바구니에' },
-  { v: '동료와 폰 없이 점심 산책·먼저 인사', ico: '👥', sub: '함께 · 폰 대신 먼저 인사' },
-  { v: '잠들 땐 폰은 침대 밖 정해진 자리에', ico: '🌙', sub: '집에서 · 숙면과 자기조절의 시작' }
+  { v: '회의 중 폰 내려놓기', ico: '📵', sub: '청에서 · 뒤집어 두거나 바구니에', t: 'blue' },
+  { v: '동료와 폰 없이 점심 산책·먼저 인사', ico: '👥', sub: '함께 · 폰 대신 먼저 인사', t: 'green' },
+  { v: '잠들 땐 폰은 침대 밖 정해진 자리에', ico: '🌙', sub: '집에서 · 숙면과 자기조절의 시작', t: 'peach' }
 ];
 var FILLS = [{ v: 'R 독서', l: 'R', t: '독서', pic: 'read' }, { v: 'A 예술·문화', l: 'A', t: '예술·문화', pic: 'art' }, { v: 'S 스포츠', l: 'S', t: '스포츠', pic: 'sport' }, { v: '함께', l: '🤝', t: '함께 (동료·가족 등)', pic: 'together' }];
 var PIC = {}; FILLS.forEach(function(o){ PIC[o.v] = o.pic; }); // 채운 활동 → 의청이 그림
@@ -1234,8 +1309,8 @@ function openRecord(){
   $('rH').value = m == null ? '' : Math.floor(m / 60); $('rM').value = m == null ? '' : m % 60;
   var pr = $('rPractices'); pr.innerHTML = '';
   var list = PRACTICES.slice();
-  (ME.user.pledges || []).forEach(function(p, i){ list.push({ v: '나의 다짐 ' + (i + 1), ico: '⭐', sub: p, label: '나의 다짐' }); });
-  list.forEach(function(o){ pr.appendChild(optEl('check', o.v, '<span class="box"></span><span class="ico">' + o.ico + '</span><span>' + esc(o.label || o.v) + '<small>' + esc(o.sub) + '</small></span>', editing && editing.practices.indexOf(o.v) >= 0)); });
+  (ME.user.pledges || []).forEach(function(p, i){ list.push({ v: '나의 다짐 ' + (i + 1), ico: '⭐', sub: p, label: '나의 다짐', t: 'purple' }); });
+  list.forEach(function(o){ pr.appendChild(optEl('check t-' + o.t, o.v, '<span class="box"></span><span class="ico">' + o.ico + '</span><span>' + esc(o.label || o.v) + '<small>' + esc(o.sub) + '</small></span>', editing && editing.practices.indexOf(o.v) >= 0)); });
   var fl = $('rFills'); fl.innerHTML = '';
   FILLS.forEach(function(o){ fl.appendChild(optEl('tile', o.v, '<img class="pic" src="assets/ui-' + o.pic + '-s.webp" alt="" loading="lazy"><span class="l">' + o.l + '</span><span class="t">' + o.t + '</span>', editing && editing.fills.indexOf(o.v) >= 0)); });
   fl.appendChild(optEl('tile none', NONE, '<span class="t">어제는 채운 활동이 없어요</span>', editing && editing.fills.indexOf(NONE) >= 0));
@@ -1295,6 +1370,7 @@ $('fRecord').addEventListener('submit', function(e){
       if (r.code === 'LOGOUT'){ drop(SKEY); show('login'); return toast('다시 로그인해 주세요.'); }
       $('recordErr').textContent = r.error; return;
     }
+    try { localStorage.removeItem(feedKey('mine')); localStorage.removeItem(feedKey('all')); } catch(e){}
     setMe(r); saved(r.edited, mins, fills);
   });
 });
@@ -1365,19 +1441,31 @@ var feedOff = 0, feedBusy = false, feedMode = 'all'; // all: 의청 게시판, m
 document.querySelectorAll('#feedSeg button').forEach(function(b){ b.onclick = function(){ setFeed(b.dataset.feed); loadBoard(true); }; });
 function setFeed(m){ feedMode = m; document.querySelectorAll('#feedSeg button').forEach(function(x){ x.setAttribute('aria-selected', x.dataset.feed === m); }); }
 var feedSeq = 0;
+/* 게시판 첫 페이지는 휴대폰에 저장해 두었다가 바로 보여 준다(서버 응답 3~10초를 기다리지 않게). 새 응답이 오면 바뀐 경우에만 다시 그린다 */
+function feedKey(mode){ return 'pfFeed:' + mode + ':' + (isAdmin() ? 'A' : (ME.user && ME.user.nickname) || ''); }
+function feedSig(items){ return items.map(function(i){ return i.id + '|' + i.at + '|' + i.share + '|' + (i.note || '').length + '|' + (i.thumbs || []).length; }).join(','); }
+function prefetchBoard(){ api('board', { token: tok(), atoken: atok(), offset: 0 }).then(function(r){ if (r.ok) save(feedKey('all'), r); }); }
 function loadBoard(reset){
   if (!reset && feedBusy) return; // 더 보기만 겹치지 않게 막고, 탭 전환(새로 불러오기)은 늦게 온 옛 응답을 버린다
-  feedBusy = true; var seq = ++feedSeq;
-  if (reset){ feedOff = 0; $('feed').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>'; $('feedEmpty').hidden = true; $('btnMore').hidden = true; }
+  feedBusy = true; var seq = ++feedSeq, cached = reset ? load(feedKey(feedMode)) : null, shown = '';
+  if (reset){
+    feedOff = 0; $('feedEmpty').hidden = true; $('btnMore').hidden = true;
+    if (cached && cached.items){ $('feed').innerHTML = ''; cached.items.forEach(function(it){ $('feed').appendChild(postEl(it)); }); shown = feedSig(cached.items); feedOff = cached.items.length; $('btnMore').hidden = true; }
+    else $('feed').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+  }
   else busy($('btnMore'), true, '불러오는 중');
   api('board', { token: tok(), atoken: atok(), offset: feedOff, mine: feedMode === 'mine' }).then(function(r){
     if (seq !== feedSeq) return;
     feedBusy = false; if (!reset) busy($('btnMore'), false);
-    if (reset) $('feed').innerHTML = '';
-    if (!r.ok){ if (authFail(r)) return; $('feed').innerHTML = '<div class="feed-empty"><p><b>게시판을 불러오지 못했어요</b>' + esc(r.error) + '</p></div>'; return; }
+    if (!r.ok){ if (authFail(r)) return; if (shown) return toast('새 글을 불러오지 못했어요'); $('feed').innerHTML = '<div class="feed-empty"><p><b>게시판을 불러오지 못했어요</b>' + esc(r.error) + '</p></div>'; return; }
+    if (reset){
+      save(feedKey(feedMode), { ok: true, items: r.items, more: r.more });
+      if (shown && shown === feedSig(r.items)){ $('btnMore').hidden = !r.more; $('feedEmpty').hidden = feedOff > 0; return; } // 저장본과 같으면 다시 그리지 않는다
+      $('feed').innerHTML = ''; feedOff = 0;
+    }
     r.items.forEach(function(it){ $('feed').appendChild(postEl(it)); });
     feedOff += r.items.length;
-    $('feedEmptyMsg').innerHTML = feedMode === 'mine' ? '<b>아직 올린 글이 없어요</b>기록하면 여기에 모아서 보여요.' : '<b>아직 올라온 글이 없어요</b>기록할 때 \'공개 게시판에 업로드하기\'를 켜 두면 여기에 보여요.';
+    $('feedEmptyMsg').innerHTML = feedMode === 'mine' ? '<b>아직 올린 글이 없어요</b>기록하면 여기에 모아서 보여요.' : '<b>아직 올라온 글이 없어요</b>기록할 때 \'의청 공개 게시판에 업로드하기\'를 켜 두면 여기에 보여요.';
     $('feedEmpty').hidden = feedOff > 0; $('btnMore').hidden = !r.more;
   });
 }
@@ -1600,6 +1688,7 @@ $('fCompose').addEventListener('submit', function(e){
   api('adminPost', data).then(function(r){
     busy(btn, false);
     if (!r.ok){ if (!authFail(r)) $('composeErr').textContent = r.error; return; }
+    try { localStorage.removeItem(feedKey('mine')); localStorage.removeItem(feedKey('all')); } catch(e){}
     history.back(); toast('공지를 올렸어요'); // 글쓰기 화면을 닫고 게시판으로(게시판은 다시 불러옴)
   });
 });
