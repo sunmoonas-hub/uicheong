@@ -572,6 +572,17 @@ ACTIONS.notifications = function (r) {
   items.sort(function (x, y) { return y.at - x.at; });
   return { ok: true, items: items.slice(0, 40) };
 };
+/* 알림 삭제: '알림' 탭에서 그 행을 지운다. 참가자 종 알림에서도 바로 사라진다(시스템 알림은 저장하지 않아 대상이 아님) */
+ACTIONS.adminDeleteAlert = function (r) {
+  if (!adminOk(r.atoken)) return DENY;
+  var id = String(r.id || ''); if (!/^N\d+$/.test(id)) return { ok: false, error: '지울 수 없는 알림입니다.' };
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var sh = sheet(SHEET_N), v = sh.getLastRow() ? sh.getDataRange().getValues() : [];
+    for (var i = v.length - 1; i >= 1; i--) if (String(v[i][0]) === id) { sh.deleteRow(i + 1); return { ok: true }; }
+  } finally { lock.releaseLock(); }
+  return { ok: false, error: '이미 삭제된 알림입니다.' };
+};
 ACTIONS.adminNotify = function (r) {
   if (!adminOk(r.atoken)) return DENY;
   var title = str(r.title, 60), body = str(r.body, 500);

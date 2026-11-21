@@ -107,7 +107,7 @@ tr.off td{color:var(--sub)}
 .ta{height:auto;min-height:140px;padding:14px 16px;line-height:1.55;resize:vertical;font-family:inherit}
 .wf .cnt{text-align:right;color:var(--sub);font-size:12px;margin-top:4px;font-variant-numeric:tabular-nums}
 .nlist .n{padding:14px 0;border-bottom:1px solid var(--line)}.nlist .n:last-child{border-bottom:0;padding-bottom:0}
-.nlist .n b{display:block;font-size:15px}
+.nlist .nt{display:flex;align-items:flex-start;gap:10px}.nlist .nt b{flex:1;font-size:15px}
 .nlist .n p{margin:4px 0 0;font-size:14px;color:var(--ink2);white-space:pre-wrap}
 .nlist .n small{display:block;margin-top:6px;color:var(--sub);font-size:12px;font-variant-numeric:tabular-nums}
 .wf .btn.lg{margin-top:18px}
@@ -171,7 +171,7 @@ tr.off td{color:var(--sub)}
     </section>
 
     <section data-panel="posts" hidden>
-      <p class="note" style="color:var(--sub);margin:0 0 12px">게시판에 공유된 글입니다. 숨기면 게시판에서만 빠지고 기록·참여율에는 그대로 남습니다.</p>
+      <p class="note" style="color:var(--sub);margin:0 0 12px">게시판에 공유된 글입니다. 숨기면 게시판에서만 빠지고 기록·참여율에는 그대로 남습니다. 운영자 공지는 삭제할 수 있습니다.</p>
       <div class="posts" id="posts"></div>
       <div style="text-align:center;margin-top:14px"><button class="btn" id="btnMore" hidden>더 보기</button></div>
     </section>
@@ -332,6 +332,19 @@ function loadPosts(reset){
     if (!r.items.length && !postOff){ $('posts').innerHTML = '<p class="empty" style="grid-column:1/-1">아직 공유된 글이 없습니다.</p>'; }
     r.items.forEach(function(p){
       var el = document.createElement('article'); el.className = 'post' + (p.share === '숨김' ? ' hid' : '');
+      if (String(p.id).indexOf('ADMIN|P') === 0){ // 운영자 공지: 숨기기 대신 삭제(되돌릴 수 없음)
+        el.innerHTML = (p.thumb ? '<img alt="">' : '') + '<div class="bd"><b>' + esc(p.nickname) + '</b> <small>운영자 공지 · ' + md(p.date) + '</small>' + (p.note ? '<p></p>' : '') + '</div>' +
+          '<div class="ft"><span class="pill done">공지</span><button class="btn sm danger">공지 삭제</button></div>';
+        if (p.thumb) el.querySelector('img').src = p.thumb;
+        if (p.note) el.querySelector('p').textContent = p.note;
+        el.querySelector('.ft button').onclick = function(){ var btn = this;
+          ask('공지를 삭제할까요?', (p.note || '사진 공지').slice(0, 40) + '\n게시판에서 바로 사라지고, 사진은 드라이브 휴지통으로 옮겨집니다.', '삭제', true).then(function(yes){
+            if (!yes) return; btn.disabled = true;
+            api('adminDeleteNotice', { id: p.id }).then(function(r){ btn.disabled = false; if (!r.ok) return toast(r.error); el.remove(); postOff = Math.max(0, postOff - 1); toast('공지를 삭제했어요'); });
+          });
+        };
+        $('posts').appendChild(el); return;
+      }
       el.innerHTML = (p.thumb ? '<img alt="">' : '') + '<div class="bd"><b>' + esc(p.nickname) + '</b> <small>' + esc(p.name) + ' · ' + esc(p.team) + ' · ' + md(p.date) + ' 기록</small>' + (p.note ? '<p></p>' : '') + '</div>' +
         '<div class="ft"><span class="pill' + (p.share === '숨김' ? ' off' : '') + '">' + p.share + '</span><button class="btn sm ' + (p.share === '숨김' ? 'soft' : 'danger') + '">' + (p.share === '숨김' ? '다시 공개' : '숨기기') + '</button></div>';
       if (p.thumb) el.querySelector('img').src = p.thumb;
@@ -358,9 +371,17 @@ function loadNoti(){
   $('nList').innerHTML = '<p class="empty">불러오는 중…</p>';
   api('notifications').then(function(r){
     if (!r.ok){ $('nList').innerHTML = '<p class="empty">' + esc(r.error) + '</p>'; return; }
-    $('nList').innerHTML = r.items.length ? r.items.map(function(n){ return '<div class="n"><b>' + esc(n.title) + '</b>' + (n.body ? '<p>' + esc(n.body) + '</p>' : '') + '<small>' + when(n.at) + ' · ' + esc(n.from) + '</small></div>'; }).join('') : '<p class="empty">아직 보낸 알림이 없습니다.</p>';
+    $('nList').innerHTML = r.items.length ? r.items.map(function(n){ return '<div class="n"><div class="nt"><b>' + esc(n.title) + '</b>' + (/^N\d+$/.test(n.id) ? '<button class="btn sm danger" data-nid="' + esc(n.id) + '">삭제</button>' : '') + '</div>' + (n.body ? '<p>' + esc(n.body) + '</p>' : '') + '<small>' + when(n.at) + ' · ' + esc(n.from) + '</small></div>'; }).join('') : '<p class="empty">아직 보낸 알림이 없습니다.</p>';
   });
 }
+$('nList').addEventListener('click', function(e){
+  var b = e.target.closest('[data-nid]'); if (!b) return;
+  var row = b.closest('.n'), title = row.querySelector('b').textContent;
+  ask('알림을 삭제할까요?', title + '\n참가자 알림 목록에서도 바로 사라집니다. 되돌릴 수 없습니다.', '삭제', true).then(function(yes){
+    if (!yes) return; b.disabled = true;
+    api('adminDeleteAlert', { id: b.dataset.nid }).then(function(r){ b.disabled = false; if (!r.ok) return toast(r.error); row.remove(); if (!$('nList').children.length) $('nList').innerHTML = '<p class="empty">아직 보낸 알림이 없습니다.</p>'; toast('알림을 삭제했어요'); });
+  });
+});
 $('fWrite').addEventListener('submit', function(e){
   e.preventDefault();
   var body = $('wBody').value.trim(), title = $('wTitle').value.trim();
