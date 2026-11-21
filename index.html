@@ -228,6 +228,70 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 .grow-new{transform-box:fill-box;transform-origin:center bottom;animation:grow .9s cubic-bezier(.2,.9,.3,1.35) .2s both}
 @keyframes grow{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
 
+/* ---------- 하단 탭 ---------- */
+.screen.tabbed{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:8;display:flex;justify-content:center;background:color-mix(in srgb,var(--surface) 88%,transparent);backdrop-filter:saturate(1.6) blur(16px);-webkit-backdrop-filter:saturate(1.6) blur(16px);border-top:1px solid var(--line);padding:6px 0 calc(6px + env(safe-area-inset-bottom))}
+.tabbar[hidden]{display:none}
+.tabbar button{flex:1;max-width:146px;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;font-size:11px;font-weight:500;color:var(--sub);cursor:pointer}
+.tabbar svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-current="page"]{color:var(--ink)}
+.tabbar button[aria-current="page"] svg{stroke:var(--brand);stroke-width:2.2}
+
+.page-title{font-size:28px;font-weight:700;letter-spacing:-.03em;margin:20px 0 4px}
+.page-sub{font-size:15px;color:var(--sub);margin:0 0 16px}
+
+/* ---------- 게시판 ---------- */
+.post{background:var(--surface);border-radius:var(--r-lg);padding:18px 18px 16px;margin:0 0 10px}
+.post-h{display:flex;align-items:center;gap:10px}
+.ava{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;color:var(--brand-ink);background:var(--brand-soft);flex:none}
+.post-h b{display:block;font-size:15px;font-weight:600;line-height:1.3}
+.post-h small{display:block;font-size:12px;color:var(--sub)}
+.post-h .me{margin-left:auto;font-size:12px;color:var(--brand-ink);background:var(--brand-soft);border-radius:999px;padding:3px 9px;font-weight:600}
+.post-note{font-size:16px;line-height:1.6;margin:12px 0 0;color:var(--ink);white-space:pre-wrap}
+.post-img{display:block;width:100%;margin-top:12px;border:0;padding:0;border-radius:var(--r-md);overflow:hidden;background:var(--fill);cursor:zoom-in}
+.post-img img{width:100%;max-height:300px;object-fit:cover}
+.post-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.post-tags span{font-size:12px;font-weight:600;color:var(--ink2);background:var(--fill);border-radius:8px;padding:4px 8px}
+.feed-empty{text-align:center;padding:48px 20px;color:var(--sub);font-size:15px;line-height:1.6}
+.feed-empty b{display:block;color:var(--ink);font-size:17px;margin-bottom:4px}
+.feed-empty[hidden],#btnMore[hidden]{display:none}
+.skel{height:132px;border-radius:var(--r-lg);margin-bottom:10px;background:linear-gradient(90deg,var(--surface) 0%,var(--fill) 50%,var(--surface) 100%);background-size:200% 100%;animation:sk 1.2s linear infinite}
+@keyframes sk{to{background-position:-200% 0}}
+
+/* ---------- 팀 참여율 ---------- */
+.my-team{background:var(--brand);color:#fff;border-radius:var(--r-lg);padding:20px;margin:0 0 12px}
+.my-team:empty{display:none}
+.my-team small{display:block;font-size:13px;opacity:.85}
+.my-team b{display:block;font-size:17px;font-weight:600;margin:2px 0 10px}
+.my-team .rate{font-size:44px;font-weight:800;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+.my-team .rate small{display:inline;font-size:20px;font-weight:600;opacity:.85;margin-left:2px}
+.my-team p{margin:10px 0 0;font-size:14px;opacity:.9}
+.rank-card{padding:8px 18px}
+.ranks{list-style:none;margin:0;padding:0}
+.ranks li{display:grid;grid-template-columns:28px 1fr auto;gap:4px 10px;align-items:center;padding:14px 0;border-top:1px solid var(--line)}
+.ranks li:first-child{border-top:0}
+.ranks .no{font-size:15px;font-weight:700;color:var(--sub);text-align:center;font-variant-numeric:tabular-nums}
+.ranks li:nth-child(-n+3) .no{color:var(--brand-ink)}
+.ranks .nm{font-size:15px;font-weight:600;line-height:1.35}
+.ranks .nm small{display:block;font-size:12px;font-weight:400;color:var(--sub);margin-top:1px}
+.ranks .pc{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.ranks .track{grid-column:2/4;height:6px;border-radius:99px;background:var(--fill);overflow:hidden}
+.ranks .track i{display:block;height:100%;border-radius:99px;background:var(--brand);transform-origin:left;animation:fillx .7s var(--ease) both}
+.ranks li.mine{background:var(--brand-soft);margin:0 -18px;padding:14px 18px;border-radius:var(--r-md);border-top-color:transparent}
+.ranks li.mine+li{border-top-color:transparent}
+.ranks li.zero .pc,.ranks li.zero .nm{color:var(--sub)}
+.ranks li.zero .track{display:none} /* 가입자 없는 팀은 빈 막대 대신 이름만 */
+@keyframes fillx{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.rank-note{font-size:12px;color:var(--sub);line-height:1.6;margin:12px 4px 0}
+
+/* ---------- 사진 크게 보기 ---------- */
+.viewer{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;flex-direction:column;padding:56px 12px 24px}
+.viewer[hidden]{display:none}
+.viewer img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+.viewer p{color:#ccc;font-size:14px;margin:12px 0 0}
+.viewer p:empty{display:none}
+.viewer-x{position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;width:44px;height:44px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:18px;cursor:pointer}
+
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:rgba(25,31,40,.92);color:#fff;padding:12px 20px;border-radius:999px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s,transform .3s var(--ease);max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:10;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .toast.on{opacity:1;transform:translateX(-50%)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -343,7 +407,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
   </section>
 
   <!-- 홈: 기록한 날만큼 화분의 새싹이 자란다(10일이면 꽃) -->
-  <section class="screen" id="s-home">
+  <section class="screen tabbed" id="s-home">
     <div class="garden">
       <div class="hi">
         <div><h2 id="hHello">환영합니다</h2><span class="tag" id="hTeam"></span></div>
@@ -428,6 +492,38 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
     </div>
     <button class="btn pri" data-go="home">확인</button>
   </section>
+
+  <!-- 게시판: 공유한 한 줄 기록과 사진 -->
+  <section class="screen tabbed" id="s-board">
+    <h1 class="page-title">게시판</h1>
+    <p class="page-sub">동료들이 폰을 내려놓고 채운 시간이에요.</p>
+    <div id="feed"></div>
+    <div class="feed-empty" id="feedEmpty" hidden>
+      <p><b>아직 올라온 글이 없어요</b>기록할 때 '게시판에 나눌게요'를 켜 두면 여기에 보여요.</p>
+    </div>
+    <button class="btn sec" id="btnMore" hidden>더 보기</button>
+  </section>
+
+  <!-- 팀 참여율 -->
+  <section class="screen tabbed" id="s-rank">
+    <h1 class="page-title">팀 참여율</h1>
+    <p class="page-sub" id="rankSub">참여율이 높은 팀에는 간식을 보내 드려요.</p>
+    <div class="my-team" id="myTeam"></div>
+    <div class="card rank-card"><ol class="ranks" id="ranks"></ol></div>
+    <p class="rank-note">참여율 = 팀 기록 수 ÷ (팀 가입자 수 × 지금까지 기록할 수 있었던 날 수). 가입한 사람이 얼마나 꾸준히 기록했는지로 잽니다. 정지된 계정은 빠집니다.</p>
+  </section>
+</div>
+
+<nav class="tabbar" id="tabbar" hidden aria-label="주요 화면">
+  <button data-tab="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c-.5-4.5-.2-8 1-11M13 10c0-3 2-5.5 6-6-.2 3.8-2.6 6-6 6zM12.4 13c-.3-2.6-2-4.4-5.4-4.8.1 3 1.9 4.8 5.4 4.8z"/></svg>홈</button>
+  <button data-tab="board"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 10h8M8 14h5"/></svg>게시판</button>
+  <button data-tab="rank"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 20V12M12 20V5M18 20v-5"/></svg>팀 참여율</button>
+</nav>
+
+<div class="viewer" id="viewer" hidden role="dialog" aria-label="사진 크게 보기">
+  <button class="viewer-x" id="viewerX" aria-label="닫기">✕</button>
+  <img id="viewerImg" alt="">
+  <p id="viewerMsg"></p>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -478,13 +574,32 @@ function demoApi(action, r){
     else if (r.date !== y) res = { ok:false, error:'어제 기록만 저장할 수 있습니다. 화면을 새로고침해 주세요.' };
     else {
       var list = recs[me.id] || [], old = list.filter(function(x){ return x.date === r.date; })[0];
-      var rec = { date: r.date, minutes: r.minutes, practices: r.practices, fills: r.fills, note: r.note, share: r.share, photo: r.photo ? true : r.removePhoto ? false : !!(old && old.photo) };
+      var rec = { date: r.date, minutes: r.minutes, practices: r.practices, fills: r.fills, note: r.note, share: r.share, photo: r.photo ? true : r.removePhoto ? false : !!(old && old.photo), thumb: r.photo ? r.thumb : r.removePhoto ? '' : (old && old.thumb) || '', at: Date.now() };
       list = list.filter(function(x){ return x.date !== r.date; }).concat([rec]).sort(function(a, b){ return a.date < b.date ? -1 : 1; });
       recs[me.id] = list; save('pfDemoRecs', recs); // 데모는 사진 원본을 저장하지 않는다
       res = { ok:true, edited: !!old, records: list };
     }
   }
   else if (action === 'demoSuspend'){ users.forEach(function(u){ if (u.id === r.token) u.status = '정지'; }); save('pfDemoUsers', users); res = { ok:true }; }
+  else if (action === 'board' || action === 'teams' || action === 'photo'){
+    // 데모: 이 브라우저의 기록 + 화면을 채워 보는 예시 동료들
+    var all = demoPeople(users), y = fmt(new Date(today() - DAY)), p = per();
+    if (action === 'board'){
+      var posts = [];
+      all.forEach(function(u){ (u.recs || []).forEach(function(x){ if (x.share) posts.push({ id: u.id + '|' + x.date, nickname: u.nickname, team: u.team, date: x.date, fills: x.fills, practices: (x.practices || []).length, note: x.note, thumb: x.thumb || '', photo: !!x.photo || !!x.thumb, mine: u.id === r.token, at: x.at || +ymd(x.date) + 9 * 36e5 }); }); });
+      posts.sort(function(a, b){ return b.at - a.at; });
+      var off = +r.offset || 0; res = { ok:true, items: posts.slice(off, off + 12), more: off + 12 < posts.length, total: posts.length };
+    } else if (action === 'teams'){
+      var last = y < p.end ? y : p.end, days = last < p.start ? 0 : Math.round((ymd(last) - ymd(p.start)) / DAY) + 1, t = {};
+      all.forEach(function(u){ var o = t[u.team] = t[u.team] || { team: u.team, members: 0, records: 0, yesterday: 0 }; o.members++; (u.recs || []).forEach(function(x){ if (x.date >= p.start && x.date <= last){ o.records++; if (x.date === y) o.yesterday++; } }); });
+      var list = Object.keys(t).map(function(k){ var o = t[k]; o.rate = days ? Math.round(o.records / (o.members * days) * 1000) / 10 : 0; return o; }).sort(function(a, b){ return b.rate - a.rate || b.members - a.members; });
+      var me2 = users.filter(function(u){ return u.id === r.token; })[0];
+      res = { ok:true, days: days, teams: list, myTeam: me2 && me2.team };
+    } else {
+      var hit = null; all.forEach(function(u){ (u.recs || []).forEach(function(x){ if (u.id + '|' + x.date === r.id) hit = x; }); });
+      res = hit && hit.thumb ? { ok:true, src: hit.thumb } : { ok:false, error:'데모에서는 사진 원본을 저장하지 않아 크게 볼 수 없어요.' };
+    }
+  }
   return new Promise(function(ok){ setTimeout(function(){ ok(res || { ok:false, error:'알 수 없는 요청' }); }, 450); }); // 실제 서버처럼 잠깐 기다린다
 }
 
@@ -494,10 +609,15 @@ function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e
 function drop(k){ try { localStorage.removeItem(k); } catch(e){} }
 
 /* ---------- 화면 전환 ---------- */
+var TABS = ['home', 'board', 'rank'];
 function show(name){
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.toggle('on', s.id === 's-' + name); });
   window.scrollTo(0, 0);
   if (name === 'signup') goStep(0);
+  var tabbed = TABS.indexOf(name) >= 0; $('tabbar').hidden = !tabbed;
+  document.querySelectorAll('.tabbar button').forEach(function(b){ if (b.dataset.tab === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  if (name === 'board') loadBoard(true);
+  if (name === 'rank') loadRank();
 }
 document.addEventListener('click', function(e){
   var go = e.target.closest('[data-go]'); if (go){ show(go.getAttribute('data-go')); return; }
@@ -831,6 +951,116 @@ function sprout(n, animate){
 function blocked(m){ drop(SKEY); $('blockedMsg').textContent = m || '운영자 확인이 필요한 계정입니다.'; show('blocked'); }
 $('btnLogout').onclick = function(){ drop(SKEY); show('welcome'); toast('로그아웃했습니다.'); };
 $('btnBlockedOut').onclick = function(){ show('welcome'); };
+/* ---------- 하단 탭 ---------- */
+document.querySelectorAll('.tabbar button').forEach(function(b){ b.onclick = function(){ if (b.dataset.tab === 'home') home(); else show(b.dataset.tab); }; });
+function tok(){ return (load(SKEY) || {}).token; }
+function authFail(r){ // 공통: 정지·로그아웃 응답이면 처리하고 true
+  if (r.code === 'SUSPENDED'){ blocked(r.error); return true; }
+  if (r.code === 'LOGOUT'){ drop(SKEY); show('login'); toast('다시 로그인해 주세요.'); return true; }
+  return false;
+}
+function ago(ms){
+  var m = Math.floor((Date.now() - ms) / 6e4);
+  if (m < 1) return '방금'; if (m < 60) return m + '분 전'; if (m < 1440) return Math.floor(m / 60) + '시간 전';
+  var d = new Date(ms); return (d.getMonth() + 1) + '월 ' + d.getDate() + '일';
+}
+
+/* ---------- 게시판 ---------- */
+var feedOff = 0, feedBusy = false;
+function loadBoard(reset){
+  if (feedBusy) return; feedBusy = true;
+  if (reset){ feedOff = 0; $('feed').innerHTML = '<div class="skel"></div><div class="skel"></div><div class="skel"></div>'; $('feedEmpty').hidden = true; $('btnMore').hidden = true; }
+  else busy($('btnMore'), true, '불러오는 중');
+  api('board', { token: tok(), offset: feedOff }).then(function(r){
+    feedBusy = false; if (!reset) busy($('btnMore'), false);
+    if (reset) $('feed').innerHTML = '';
+    if (!r.ok){ if (authFail(r)) return; $('feed').innerHTML = '<div class="feed-empty"><p><b>게시판을 불러오지 못했어요</b>' + esc(r.error) + '</p></div>'; return; }
+    r.items.forEach(function(it){ $('feed').appendChild(postEl(it)); });
+    feedOff += r.items.length;
+    $('feedEmpty').hidden = feedOff > 0; $('btnMore').hidden = !r.more;
+  });
+}
+function postEl(it){
+  var el = document.createElement('article'); el.className = 'post';
+  var tags = (it.fills || []).filter(function(f){ return f !== NONE; }).map(function(f){ return '<span>' + esc(f) + '</span>'; }).join('');
+  if (it.practices) tags += '<span>실천 ' + it.practices + '개</span>';
+  el.innerHTML =
+    '<div class="post-h"><span class="ava">' + esc(String(it.nickname).charAt(0)) + '</span><div><b>' + esc(it.nickname) + '</b><small>' + esc(it.team) + ' · ' + md(it.date) + ' 기록</small></div>' + (it.mine ? '<span class="me">나</span>' : '') + '</div>' +
+    (it.note ? '<p class="post-note"></p>' : '') +
+    (it.thumb ? '<button type="button" class="post-img" aria-label="사진 크게 보기"><img alt="' + esc(it.nickname) + '님이 올린 사진" loading="lazy"></button>' : '') +
+    (tags ? '<div class="post-tags">' + tags + '</div>' : '');
+  if (it.note) el.querySelector('.post-note').textContent = it.note;
+  if (it.thumb){ el.querySelector('.post-img img').src = it.thumb; el.querySelector('.post-img').onclick = function(){ openViewer(it); }; }
+  return el;
+}
+$('btnMore').onclick = function(){ loadBoard(false); };
+
+/* 사진 크게 보기: 썸네일을 먼저 띄우고, 원본은 서버에서 받아 바꿔 끼운다 */
+var viewerFor = null;
+function openViewer(it){
+  viewerFor = it.id; $('viewerImg').src = it.thumb; $('viewerMsg').textContent = it.photo ? '원본을 불러오는 중…' : ''; $('viewer').hidden = false; $('viewerX').focus();
+  if (!it.photo) return;
+  api('photo', { token: tok(), id: it.id }).then(function(r){
+    if (viewerFor !== it.id || $('viewer').hidden) return;
+    if (r.ok){ $('viewerImg').src = r.src; $('viewerMsg').textContent = ''; } else $('viewerMsg').textContent = r.error;
+  });
+}
+function closeViewer(){ $('viewer').hidden = true; viewerFor = null; }
+$('viewerX').onclick = closeViewer;
+$('viewer').addEventListener('click', function(e){ if (e.target === this) closeViewer(); });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !$('viewer').hidden) closeViewer(); });
+
+/* ---------- 팀 참여율 ---------- */
+function loadRank(){
+  $('ranks').innerHTML = '<li><span></span><span class="nm" style="color:var(--sub)">불러오는 중…</span></li>'; $('myTeam').innerHTML = '';
+  api('teams', { token: tok() }).then(function(r){
+    if (!r.ok){ if (authFail(r)) return; $('ranks').innerHTML = '<li><span></span><span class="nm">' + esc(r.error) + '</span></li>'; return; }
+    // 아직 가입자가 없는 팀도 0%로 아래에 보여 준다
+    var have = {}, list = r.teams.slice();
+    list.forEach(function(t){ have[t.team] = 1; });
+    (CFG.TEAMS || []).forEach(function(n){ if (!have[n]) list.push({ team: n, members: 0, records: 0, yesterday: 0, rate: 0 }); });
+    var mine = ME.user ? ME.user.team : r.myTeam, myIdx = -1, myRank = 0;
+    $('rankSub').textContent = r.days ? md(fmt(new Date(ymd(per().start).getTime() + (r.days - 1) * DAY))) + ' 기록까지, ' + r.days + '일 기준이에요.' : '첫 기록(11월 24일)부터 집계돼요. 참여율이 높은 팀에는 간식을 보내 드려요.';
+    var rank = 0, prev = null;
+    $('ranks').innerHTML = list.map(function(t, i){
+      if (t.rate !== prev){ rank = i + 1; prev = t.rate; } // 같은 비율은 같은 순위
+      if (t.team === mine){ myIdx = i; myRank = rank; }
+      return '<li class="' + (t.team === mine ? 'mine ' : '') + (t.members ? '' : 'zero') + '"><span class="no">' + (t.members ? rank : '–') + '</span>' +
+        '<span class="nm">' + esc(t.team) + '<small>가입 ' + t.members + '명' + (t.members ? ' · 어제 기록 ' + t.yesterday + '명' : '') + '</small></span>' +
+        '<span class="pc">' + (t.members ? t.rate + '%' : '–') + '</span><span class="track"><i style="width:' + Math.min(100, t.rate) + '%"></i></span></li>';
+    }).join('');
+    if (myIdx >= 0){
+      var m = list[myIdx];
+      $('myTeam').innerHTML = '<small>우리 팀</small><b></b><div class="rate">' + m.rate + '<small>%</small></div><p>' + list.filter(function(t){ return t.members; }).length + '개 팀 중 ' + myRank + '위 · 가입 ' + m.members + '명 · 어제 ' + m.yesterday + '명 기록</p>';
+      $('myTeam').querySelector('b').textContent = m.team;
+    }
+  });
+}
+
+/* 데모 전용: 게시판·순위가 비어 보이지 않도록 예시 동료를 더한다(서버 연결 시에는 쓰지 않음) */
+function demoPeople(users){
+  var recs = load('pfDemoRecs') || {}, out = users.filter(function(u){ return u.status !== '정지'; }).map(function(u){ return { id: u.id, nickname: u.nickname, team: u.team, recs: recs[u.id] || [] }; });
+  var T = CFG.TEAMS || [], y = fmt(new Date(today() - DAY)), p = per();
+  var notes = ['점심에 폰 두고 동료와 산책했더니 오후가 가벼웠어요.', '자기 전 폰을 거실에 두니 금방 잠들었어요.', '회의 때 폰을 뒤집어 두니 이야기에 집중됐어요.', '퇴근 후 아이와 보드게임 한 판!', '오랜만에 책 30쪽 읽었어요.', '저녁에 동네 한 바퀴 걸었어요.', ''];
+  var fills = [['S 스포츠', '함께'], ['R 독서'], ['함께'], ['A 예술·문화'], ['R 독서', 'S 스포츠'], ['S 스포츠'], ['못 했어요']];
+  [['책읽는부엉이', 2, .9], ['산책왕', 2, .75], ['늘푸른', 8, .8], ['오후의햇살', 0, .95], ['걷는사람', 5, .6], ['다정한고래', 11, .5], ['초록발자국', 8, .7]].forEach(function(s, k){
+    var list = [];
+    for (var d = ymd(p.start), n = 0; fmt(d) <= y && fmt(d) <= p.end; d = new Date(d.getTime() + DAY), n++){
+      if (((n * 7 + k * 3) % 10) / 10 >= s[2]) continue; // 사람마다 다른 빈도로 빠지는 날
+      list.push({ date: fmt(d), practices: [1, 2], fills: fills[(n + k) % 7], note: notes[(n + k) % 7], share: (n + k) % 3 !== 2, thumb: (n + k) % 4 === 0 ? demoThumb(fills[(n + k) % 7][0]) : '', at: d.getTime() + DAY + (9 + k) * 36e5 });
+    }
+    out.push({ id: 'S' + k, nickname: s[0], team: T[s[1]] || '팀', recs: list });
+  });
+  return out;
+}
+function demoThumb(kind){
+  var c = document.createElement('canvas'); c.width = 360; c.height = 240; var x = c.getContext('2d');
+  var g = x.createLinearGradient(0, 0, 360, 240); g.addColorStop(0, '#CDEBD8'); g.addColorStop(1, '#8FD1A8'); x.fillStyle = g; x.fillRect(0, 0, 360, 240);
+  x.font = '96px serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText({ 'R 독서': '📚', 'S 스포츠': '👟', '함께': '☕', 'A 예술·문화': '🎨' }[kind] || '🌱', 180, 124);
+  return c.toDataURL('image/jpeg', .7);
+}
+
 $('btnDemoSuspend').onclick = function(){ var s = load(SKEY); if (!s) return; api('demoSuspend', { token: s.token }).then(function(){ toast('정지했습니다. 다시 열면 안내 화면이 보입니다.'); setTimeout(start, 900); }); };
 
 /* ---------- 시작: 저장된 로그인이 있으면 서버에서 정지 여부를 다시 확인 ---------- */

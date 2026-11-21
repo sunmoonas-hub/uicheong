@@ -113,9 +113,79 @@ var ACTIONS = {
       for (var i = 0; i < RHEAD.length; i++) if (row[i] === undefined) row[i] = '';
       if (found) sh.getRange(found.index, 1, 1, RHEAD.length).setValues([row]); else sh.appendRow(row);
     } finally { lock.releaseLock(); }
+    CacheService.getScriptCache().remove('teams'); // 새 기록이 순위에 바로 반영되도록
     return { ok: true, edited: !!found, records: userRecords(uid) };
+  },
+
+  /* 게시판: '공유'로 저장한 기록만, 최근 저장 순. 정지된 사람 글과 운영자가 '숨김'으로 바꾼 글은 뺀다.
+   * 썸네일(약 20KB)을 함께 보내므로 한 번에 12개씩 나눠 준다. */
+  board: function (r) {
+    var a = active(r.token); if (a.error) return a.error;
+    var me = a.f.row[C.ID], bad = suspendedIds(), v = sheet(SHEET_R).getDataRange().getValues(), list = [];
+    for (var i = 1; i < v.length; i++) {
+      var w = v[i];
+      if (w[R['공유']] !== '공유' || bad[w[R['사용자ID']]]) continue;
+      list.push({ i: i, t: +new Date(w[R['수정시각']] || w[R['저장시각']]) || 0 });
+    }
+    list.sort(function (x, y) { return y.t - x.t; });
+    var off = Math.max(0, parseInt(r.offset, 10) || 0), PAGE = 12;
+    var items = list.slice(off, off + PAGE).map(function (o) {
+      var w = v[o.i];
+      return { id: w[R['기록ID']], nickname: w[R['닉네임']], team: w[R['팀']], date: String(w[R['기록일']]).replace(/^'/, ''),
+        fills: w[R['채움활동']] ? String(w[R['채움활동']]).split(' | ') : [], practices: w[R['실천']] ? String(w[R['실천']]).split(' | ').length : 0,
+        note: w[R['한줄기록']], thumb: w[R['썸네일']] || '', photo: !!w[R['사진ID']], mine: w[R['사용자ID']] === me, at: o.t };
+    });
+    return { ok: true, items: items, more: off + PAGE < list.length, total: list.length };
+  },
+
+  /* 사진 크게 보기: Drive 비공개 파일을 이 앱을 통해서만 보여 준다(공개 링크를 만들지 않는다). */
+  photo: function (r) {
+    var a = active(r.token); if (a.error) return a.error;
+    var f = findRecord(String(r.id || ''));
+    if (!f || !f.row[R['사진ID']]) return { ok: false, error: '사진을 찾을 수 없습니다.' };
+    if (f.row[R['공유']] !== '공유' && f.row[R['사용자ID']] !== a.f.row[C.ID]) return { ok: false, error: '볼 수 없는 사진입니다.' };
+    try {
+      var b = DriveApp.getFileById(f.row[R['사진ID']]).getBlob();
+      return { ok: true, src: 'data:image/jpeg;base64,' + Utilities.base64Encode(b.getBytes()) };
+    } catch (e) { return { ok: false, error: '사진을 불러오지 못했습니다.' }; }
+  },
+
+  /* 팀 참여율 = 팀 기록 수 ÷ (팀 가입자 수 × 지금까지 기록할 수 있었던 날 수).
+   * 팀별 정원을 알 수 없어 '가입한 사람이 얼마나 꾸준히 기록했나'로 잰다. 2분 캐시. */
+  teams: function (r) {
+    var a = active(r.token); if (a.error) return a.error;
+    var c = CacheService.getScriptCache(), hit = c.get('teams');
+    var res = hit ? JSON.parse(hit) : teamStats();
+    if (!hit) c.put('teams', JSON.stringify(res), 120);
+    res.ok = true; res.myTeam = a.f.row[C['팀']];
+    return res;
   }
 };
+
+function suspendedIds() {
+  var v = sheet(SHEET_P).getDataRange().getValues(), o = {};
+  for (var i = 1; i < v.length; i++) if (v[i][C['상태']] === '정지') o[v[i][C.ID]] = 1;
+  return o;
+}
+function teamStats() {
+  var p = period(), yest = ymd(new Date(Date.now() - 864e5)), last = yest < p.end ? yest : p.end;
+  var days = last < p.start ? 0 : Math.round((new Date(last) - new Date(p.start)) / 864e5) + 1;
+  var users = sheet(SHEET_P).getDataRange().getValues(), t = {}, uTeam = {};
+  for (var i = 1; i < users.length; i++) {
+    var u = users[i]; if (u[C['상태']] === '정지' || !u[C.ID]) continue;
+    var name = u[C['팀']]; uTeam[u[C.ID]] = name;
+    (t[name] = t[name] || { team: name, members: 0, records: 0, yesterday: 0 }).members++;
+  }
+  var rec = sheet(SHEET_R).getDataRange().getValues();
+  for (var j = 1; j < rec.length; j++) {
+    var w = rec[j], tm = uTeam[w[R['사용자ID']]], d = String(w[R['기록일']]).replace(/^'/, '');
+    if (!tm || d < p.start || d > last) continue;
+    t[tm].records++; if (d === yest) t[tm].yesterday++;
+  }
+  var list = Object.keys(t).map(function (k) { var x = t[k]; x.rate = days && x.members ? Math.round(x.records / (x.members * days) * 1000) / 10 : 0; return x; });
+  list.sort(function (x, y) { return y.rate - x.rate || y.members - x.members; });
+  return { days: days, teams: list, updated: +new Date() };
+}
 
 /* ---------- 설치 ---------- */
 function setup() {
@@ -126,6 +196,8 @@ function setup() {
   var rs = sheet(SHEET_R);
   if (rs.getLastRow() === 0) { rs.appendRow(RHEAD); rs.setFrozenRows(1); rs.getRange(1, 1, 1, RHEAD.length).setFontWeight('bold'); }
   rs.hideColumns(R['썸네일'] + 1); rs.hideColumns(R['사용자ID'] + 1);
+  // 운영자가 부적절한 글을 '숨김'으로 바꾸면 게시판에서 빠진다(기록·참여율에는 그대로 남음)
+  rs.getRange(2, R['공유'] + 1, 3000, 1).setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['공유', '비공개', '숨김'], true).build());
   var s = sheet(SHEET_S);
   if (s.getLastRow() === 0) { s.appendRow(['항목', '값', '설명']); s.setFrozenRows(1); }
   var have = s.getDataRange().getValues().map(function (v) { return String(v[0]); });
