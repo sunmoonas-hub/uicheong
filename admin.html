@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>관리자 · 의좋은 폰프리 청 챌린지</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+/* 학생 앱(index.html)과 같은 토큰. 관리자 화면은 PC에서 표를 넓게 보는 일이 많아 최대 폭을 넓혔다 */
+:root{
+  --bg:#F2F4F6; --surface:#FFFFFF; --fill:#F2F4F6; --line:#E5E8EB;
+  --ink:#191F28; --ink2:#4E5968; --sub:#8B95A1;
+  --brand:#14A05A; --brand-press:#0F8A4C; --brand-soft:#E7F6EE; --brand-ink:#0B6B3B;
+  --red:#F04452; --red-soft:#FEECEE; --sun:#FFB020;
+  --r-lg:20px; --r-md:14px; --r-sm:10px; color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{--bg:#101013;--surface:#1B1B1F;--fill:#26262B;--line:#2E2E34;--ink:#F3F4F6;--ink2:#C4C9D0;--sub:#8B929B;--brand:#2DBE70;--brand-press:#25A862;--brand-soft:#15301F;--brand-ink:#7FE0A8;--red:#FF5B67;--red-soft:#3A1D21;color-scheme:dark}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;font-size:15px;line-height:1.5;letter-spacing:-.01em;word-break:keep-all;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit;letter-spacing:inherit}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px 48px}
+.tnum{font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+
+.bar{display:flex;align-items:center;gap:12px;padding:16px 0}
+.bar img{height:26px;border-radius:4px}
+@media (prefers-color-scheme:dark){.bar img{background:#fff;padding:3px 6px;height:30px}}
+.bar h1{font-size:17px;font-weight:700;margin:0}
+.bar .sp{flex:1}
+.btn{border:0;border-radius:var(--r-sm);padding:0 14px;min-height:40px;font-weight:600;cursor:pointer;background:var(--fill);color:var(--ink2);white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--brand);color:#fff}.btn.pri:active{background:var(--brand-press)}
+.btn.soft{background:var(--brand-soft);color:var(--brand-ink)}
+.btn.danger{background:var(--red-soft);color:var(--red)}
+.btn.sm{min-height:32px;padding:0 10px;font-size:13px}
+.btn.lg{min-height:52px;font-size:16px;width:100%;border-radius:var(--r-md)}
+.btn:disabled{opacity:.5;cursor:default}
+
+/* 로그인 */
+.login{max-width:380px;margin:12vh auto 0;background:var(--surface);border-radius:var(--r-lg);padding:28px 24px}
+.login h2{font-size:22px;margin:0 0 6px}
+.login p{color:var(--sub);margin:0 0 20px}
+.in{width:100%;height:52px;border:0;border-radius:var(--r-md);padding:0 16px;font-size:16px;background:var(--fill);outline:none}
+.in:focus{box-shadow:inset 0 0 0 2px var(--brand);background:var(--surface)}
+.err{color:var(--red);font-size:14px;margin:10px 2px 0;min-height:1px}
+.login .btn{margin-top:14px}
+.login a{display:block;text-align:center;margin-top:16px;color:var(--sub);font-size:14px}
+
+/* 탭 */
+.tabs{display:flex;gap:4px;background:var(--surface);border-radius:var(--r-md);padding:4px;margin-bottom:16px;overflow-x:auto}
+.tabs button{flex:1;border:0;background:none;border-radius:var(--r-sm);padding:10px 12px;font-weight:600;color:var(--sub);cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--fill);color:var(--ink)}
+
+/* 현황 */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:var(--surface);border-radius:var(--r-lg);padding:18px}
+.stat small{display:block;color:var(--sub);font-size:13px}
+.stat b{display:block;font-size:30px;font-weight:800;letter-spacing:-.03em;margin-top:2px;font-variant-numeric:tabular-nums}
+.stat b span{font-size:15px;font-weight:600;color:var(--sub);margin-left:2px}
+.card{background:var(--surface);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:16px}
+.card h3{font-size:16px;margin:0 0 4px}
+.card .note{color:var(--sub);font-size:13px;margin:0 0 12px}
+
+/* 표 */
+.tw{overflow-x:auto;margin:0 -20px;padding:0 20px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-weight:600;color:var(--sub);font-size:12px;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td .sub{display:block;color:var(--sub);font-size:12px}
+.pill{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:3px 9px;background:var(--brand-soft);color:var(--brand-ink)}
+.pill.off{background:var(--red-soft);color:var(--red)}
+.pill.done{background:#FFF3D6;color:#8A5A00}
+@media (prefers-color-scheme:dark){.pill.done{background:#3A2E12;color:#FFD27A}}
+tr.off td{color:var(--sub)}
+.acts{display:flex;gap:6px;justify-content:flex-end}
+.meter{display:flex;align-items:center;gap:8px;min-width:140px}
+.meter i{flex:1;height:6px;border-radius:99px;background:var(--fill);overflow:hidden;display:block}
+.meter i::after{content:'';display:block;height:100%;width:var(--w);background:var(--brand);border-radius:99px}
+
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.tools .in{height:42px;font-size:15px;flex:1;min-width:160px}
+.tools select.in{flex:0 1 220px;appearance:none;padding-right:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238B95A1' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.empty{text-align:center;color:var(--sub);padding:32px 0}
+
+/* 게시글 */
+.posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.post{background:var(--surface);border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column}
+.post img{width:100%;height:150px;object-fit:cover;background:var(--fill)}
+.post .bd{padding:12px 14px;flex:1}
+.post .bd b{font-size:14px}
+.post .bd small{display:block;color:var(--sub);font-size:12px}
+.post .bd p{margin:8px 0 0;font-size:14px;white-space:pre-wrap}
+.post .ft{display:flex;justify-content:space-between;align-items:center;padding:0 14px 12px}
+.post.hid{opacity:.55}
+
+/* 확인 창: 브라우저 confirm 대신(모바일·자동화에서 막히지 않도록) */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20;padding:16px}
+@media (min-width:640px){.modal{align-items:center}}
+.sheet{background:var(--surface);border-radius:var(--r-lg);padding:24px 20px 20px;width:100%;max-width:400px}
+.sheet h3{margin:0 0 8px;font-size:18px}
+.sheet p{margin:0 0 18px;color:var(--ink2);white-space:pre-line}
+.sheet .row{display:flex;gap:8px}.sheet .row .btn{flex:1;min-height:48px}
+.temp{font-size:28px;font-weight:800;letter-spacing:.06em;text-align:center;background:var(--fill);border-radius:var(--r-md);padding:14px;margin:0 0 14px;font-variant-numeric:tabular-nums;user-select:all}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(25,31,40,.92);color:#fff;padding:12px 20px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:30;white-space:nowrap}
+.toast.on{opacity:1}
+.spin{display:inline-block;width:16px;height:16px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-3px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar"><img src="assets/logo.jpg" alt="경기도의정부교육지원청"><h1>관리자</h1><span class="sp"></span>
+    <button class="btn sm" id="btnRefresh" hidden>새로고침</button><button class="btn sm" id="btnOut" hidden>로그아웃</button></div>
+
+  <form class="login" id="fLogin" hidden>
+    <h2>관리자 로그인</h2>
+    <p>의좋은 폰프리 청 챌린지 운영 화면입니다.</p>
+    <input class="in" id="pw" type="password" placeholder="관리자 비밀번호" autocomplete="current-password">
+    <div class="err" id="loginErr"></div>
+    <button class="btn pri lg" id="btnLogin" type="submit">로그인</button>
+    <a href="./">참가자 화면으로</a>
+  </form>
+
+  <main id="app" hidden>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="sum" aria-selected="true">현황</button>
+      <button role="tab" data-tab="users">참가자</button>
+      <button role="tab" data-tab="done">완수자</button>
+      <button role="tab" data-tab="posts">게시글</button>
+    </div>
+
+    <section data-panel="sum">
+      <div class="stats" id="stats"></div>
+      <div class="card"><h3>팀 참여율</h3><p class="note" id="teamNote"></p><div class="tw"><table id="teamTable"></table></div></div>
+    </section>
+
+    <section data-panel="users" hidden>
+      <div class="card">
+        <div class="tools"><input class="in" id="q" placeholder="성명·닉네임·내선 검색"><select class="in" id="fTeam"><option value="">모든 팀</option></select></div>
+        <div class="tw"><table id="userTable"></table></div>
+      </div>
+    </section>
+
+    <section data-panel="done" hidden>
+      <div class="card">
+        <h3>완수 기준 달성자</h3>
+        <p class="note">기록 10일 이상, 정지되지 않은 참가자입니다. 최종 완수는 마무리 설문(12월 7일~9일) 참여 여부와 대조해 확정해 주세요.</p>
+        <div class="tools"><button class="btn soft" id="btnCsv">엑셀용 CSV 내려받기</button></div>
+        <div class="tw"><table id="doneTable"></table></div>
+      </div>
+    </section>
+
+    <section data-panel="posts" hidden>
+      <p class="note" style="color:var(--sub);margin:0 0 12px">게시판에 공유된 글입니다. 숨기면 게시판에서만 빠지고 기록·참여율에는 그대로 남습니다.</p>
+      <div class="posts" id="posts"></div>
+      <div style="text-align:center;margin-top:14px"><button class="btn" id="btnMore" hidden>더 보기</button></div>
+    </section>
+  </main>
+</div>
+<div class="modal" id="modal" hidden><div class="sheet" role="dialog" aria-modal="true"><h3 id="mT"></h3><div id="mExtra"></div><p id="mP"></p><div class="row"><button class="btn" id="mNo">취소</button><button class="btn pri" id="mYes">확인</button></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+'use strict';
+var CFG = window.PF_CONFIG || {}, URL_ = (CFG.APPS_SCRIPT_URL || '').trim(), KEY = 'pfAdmin';
+var $ = function(id){ return document.getElementById(id); };
+var DATA = null, postOff = 0;
+
+function api(action, data){
+  if (!URL_) return Promise.resolve({ ok: false, error: 'config.js에 서버 주소가 없습니다.' });
+  return fetch(URL_, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ action: action, atoken: tok() }, data || {})) })
+    .then(function(r){ return r.json(); })
+    .then(function(r){ if (r.code === 'ADMIN'){ logout(); $('loginErr').textContent = '다시 로그인해 주세요.'; } return r; })
+    .catch(function(){ return { ok: false, error: '서버에 연결하지 못했습니다.' }; });
+}
+// 공용 PC에서 쓰는 경우가 많아 탭을 닫으면 로그인이 풀리도록 sessionStorage에만 둔다
+function tok(){ try { return sessionStorage.getItem(KEY) || ''; } catch(e){ return ''; } }
+function setTok(t){ try { t ? sessionStorage.setItem(KEY, t) : sessionStorage.removeItem(KEY); } catch(e){} }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+function toast(t){ var el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(function(){ el.classList.remove('on'); }, 2200); }
+function md(s){ if (!s) return '–'; var p = s.split('-'); return +p[1] + '/' + +p[2]; }
+function ask(title, body, yes, danger, extra){
+  return new Promise(function(ok){
+    $('mT').textContent = title; $('mP').textContent = body; $('mExtra').innerHTML = extra || '';
+    $('mYes').textContent = yes || '확인'; $('mYes').className = 'btn ' + (danger ? 'danger' : 'pri'); $('mNo').hidden = yes === null;
+    $('modal').hidden = false; $('mYes').focus();
+    $('mYes').onclick = function(){ $('modal').hidden = true; ok(true); };
+    $('mNo').onclick = function(){ $('modal').hidden = true; ok(false); };
+  });
+}
+
+/* ---------- 로그인 ---------- */
+function logout(){ setTok(''); $('app').hidden = true; $('fLogin').hidden = false; $('btnOut').hidden = $('btnRefresh').hidden = true; $('pw').value = ''; }
+$('fLogin').addEventListener('submit', function(e){
+  e.preventDefault(); $('loginErr').textContent = '';
+  var b = $('btnLogin'); b.disabled = true; b.innerHTML = '<span class="spin"></span>확인 중';
+  api('adminLogin', { password: $('pw').value }).then(function(r){
+    b.disabled = false; b.textContent = '로그인';
+    if (!r.ok){ $('loginErr').textContent = r.error; return; }
+    setTok(r.atoken); enter();
+  });
+});
+$('btnOut').onclick = logout;
+$('btnRefresh').onclick = function(){ load(); };
+function enter(){ $('fLogin').hidden = true; $('app').hidden = false; $('btnOut').hidden = $('btnRefresh').hidden = false; load(); }
+
+/* ---------- 탭 ---------- */
+document.querySelectorAll('.tabs button').forEach(function(b){ b.onclick = function(){ tab(b.dataset.tab); }; });
+function tab(name){
+  document.querySelectorAll('.tabs button').forEach(function(b){ b.setAttribute('aria-selected', b.dataset.tab === name); });
+  document.querySelectorAll('[data-panel]').forEach(function(p){ p.hidden = p.dataset.panel !== name; });
+  if (name === 'posts' && !$('posts').children.length) loadPosts(true);
+}
+
+/* ---------- 데이터 ---------- */
+function load(){
+  $('stats').innerHTML = '<div class="stat"><small>불러오는 중…</small><b>–</b></div>';
+  api('adminData').then(function(r){
+    if (!r.ok){ if (r.code !== 'ADMIN') $('stats').innerHTML = '<div class="stat"><small>오류</small><b style="font-size:15px">' + esc(r.error) + '</b></div>'; return; }
+    DATA = r; renderSum(); renderUsers(); renderDone();
+  });
+}
+function renderSum(){
+  var s = DATA.summary;
+  $('stats').innerHTML = [
+    ['가입', s.active, '명', s.members !== s.active ? '정지 ' + (s.members - s.active) + '명 제외' : ''],
+    ['어제(' + md(DATA.yesterday) + ') 기록', s.yesterday, '명', s.active ? Math.round(s.yesterday / s.active * 100) + '%' : ''],
+    ['완수 기준 달성', s.completed, '명', '10일 이상'],
+    ['게시글', s.shared, '개', s.hidden ? '숨김 ' + s.hidden + '개' : '']
+  ].map(function(x){ return '<div class="stat"><small>' + x[0] + '</small><b>' + x[1] + '<span>' + x[2] + '</span></b><small>' + x[3] + '</small></div>'; }).join('');
+  var t = DATA.teams, have = {}; t.teams.forEach(function(x){ have[x.team] = 1; });
+  var list = t.teams.concat((CFG.TEAMS || []).filter(function(n){ return !have[n]; }).map(function(n){ return { team: n, members: 0, records: 0, yesterday: 0, rate: 0 }; }));
+  $('teamNote').textContent = t.days ? DATA.period.start + '부터 ' + t.days + '일 기준 · 참여율 = 팀 기록 수 ÷ (가입자 수 × 기록 가능 일수)' : '첫 기록(시작 다음 날)부터 집계됩니다.';
+  var rank = 0, prev = null;
+  $('teamTable').innerHTML = '<thead><tr><th>순위</th><th>팀</th><th class="num">가입</th><th class="num">기록 수</th><th class="num">어제</th><th>참여율</th></tr></thead><tbody>' +
+    list.map(function(x, i){ if (x.rate !== prev){ rank = i + 1; prev = x.rate; }
+      return '<tr' + (x.members ? '' : ' class="off"') + '><td class="tnum">' + (x.members ? rank : '–') + '</td><td>' + esc(x.team) + '</td><td class="num">' + x.members + '</td><td class="num">' + x.records + '</td><td class="num">' + x.yesterday + '</td><td><span class="meter"><i style="--w:' + Math.min(100, x.rate) + '%"></i><b class="tnum">' + x.rate + '%</b></span></td></tr>'; }).join('') + '</tbody>';
+}
+
+/* ---------- 참가자 ---------- */
+(CFG.TEAMS || []).forEach(function(t){ $('fTeam').add(new Option(t, t)); });
+$('q').addEventListener('input', renderUsers); $('fTeam').addEventListener('change', renderUsers);
+function renderUsers(){
+  if (!DATA) return;
+  var q = $('q').value.trim().toLowerCase(), tm = $('fTeam').value;
+  var list = DATA.users.filter(function(u){ return (!tm || u.team === tm) && (!q || (u.name + ' ' + u.nickname + ' ' + u.ext).toLowerCase().indexOf(q) >= 0); })
+    .sort(function(a, b){ return a.team < b.team ? -1 : a.team > b.team ? 1 : a.name < b.name ? -1 : 1; });
+  $('userTable').innerHTML = list.length ? '<thead><tr><th>성명</th><th>팀</th><th>내선</th><th>닉네임</th><th>가입</th><th class="num">기록</th><th>마지막</th><th>상태</th><th></th></tr></thead><tbody>' +
+    list.map(function(u){
+      return '<tr' + (u.status === '정지' ? ' class="off"' : '') + '><td><b>' + esc(u.name) + '</b><span class="sub">' + esc(u.position) + '</span></td><td>' + esc(u.team) + '</td><td class="tnum">' + esc(u.ext) + '</td><td>' + esc(u.nickname) + '</td><td class="tnum">' + md(u.joined) + '</td>' +
+        '<td class="num">' + u.days + (u.days >= 10 ? ' <span class="pill done">완수</span>' : '') + '</td><td class="tnum">' + md(u.last) + '</td>' +
+        '<td><span class="pill' + (u.status === '정지' ? ' off' : '') + '">' + esc(u.status) + '</span></td>' +
+        '<td><div class="acts"><button class="btn sm" data-reset="' + esc(u.id) + '">비밀번호 초기화</button><button class="btn sm ' + (u.status === '정지' ? 'soft' : 'danger') + '" data-status="' + esc(u.id) + '">' + (u.status === '정지' ? '정지 해제' : '정지') + '</button></div></td></tr>';
+    }).join('') + '</tbody>' : '<tbody><tr><td class="empty">' + (DATA.users.length ? '검색 결과가 없습니다.' : '아직 가입한 사람이 없습니다.') + '</td></tr></tbody>';
+}
+$('userTable').addEventListener('click', function(e){
+  var b = e.target.closest('button'); if (!b) return;
+  var id = b.dataset.reset || b.dataset.status, u = DATA.users.filter(function(x){ return x.id === id; })[0]; if (!u) return;
+  if (b.dataset.status){
+    var to = u.status === '정지' ? '정상' : '정지';
+    ask(to === '정지' ? '계정을 정지할까요?' : '정지를 풀까요?', u.name + ' (' + u.team + ', 닉네임 ' + u.nickname + ')\n' + (to === '정지' ? '정지하면 로그인해도 안내 화면만 보이고, 게시판·참여율에서 빠집니다.' : '다시 기록하고 게시판을 쓸 수 있게 됩니다.'), to === '정지' ? '정지' : '정지 해제', to === '정지')
+      .then(function(yes){ if (!yes) return; b.disabled = true; api('adminSetStatus', { id: id, status: to }).then(function(r){ b.disabled = false; if (!r.ok) return toast(r.error); u.status = to; renderUsers(); toast(to === '정지' ? '정지했어요' : '정지를 풀었어요'); }); });
+  } else {
+    ask('비밀번호를 초기화할까요?', u.name + ' (닉네임 ' + u.nickname + ')\n임시 비밀번호가 만들어지고, 그 사람의 기존 로그인은 풀립니다.', '초기화', true)
+      .then(function(yes){ if (!yes) return; b.disabled = true; api('adminResetPw', { id: id }).then(function(r){ b.disabled = false; if (!r.ok) return toast(r.error);
+        ask('임시 비밀번호', '본인에게만 직접 알려 주세요. 이 창을 닫으면 다시 볼 수 없습니다.\n닉네임: ' + u.nickname, '닫기', false, '<div class="temp">' + esc(r.temp) + '</div>'); $('mNo').hidden = true; }); });
+  }
+});
+
+/* ---------- 완수자 ---------- */
+function doneList(){ return DATA.users.filter(function(u){ return u.days >= 10 && u.status !== '정지'; }).sort(function(a, b){ return b.days - a.days || (a.team < b.team ? -1 : 1); }); }
+function renderDone(){
+  var list = doneList();
+  $('doneTable').innerHTML = list.length ? '<thead><tr><th>성명</th><th>팀</th><th>직위</th><th>내선</th><th>닉네임</th><th class="num">기록 일수</th></tr></thead><tbody>' +
+    list.map(function(u){ return '<tr><td><b>' + esc(u.name) + '</b></td><td>' + esc(u.team) + '</td><td>' + esc(u.position) + '</td><td class="tnum">' + esc(u.ext) + '</td><td>' + esc(u.nickname) + '</td><td class="num">' + u.days + '일</td></tr>'; }).join('') + '</tbody>'
+    : '<tbody><tr><td class="empty">아직 10일 이상 기록한 사람이 없습니다.</td></tr></tbody>';
+}
+$('btnCsv').onclick = function(){
+  var rows = [['성명', '팀', '직위', '내선', '닉네임', '기록 일수', '마지막 기록']].concat(doneList().map(function(u){ return [u.name, u.team, u.position, u.ext, u.nickname, u.days, u.last]; }));
+  var csv = rows.map(function(r){ return r.map(function(c){ c = String(c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\r\n');
+  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })); // BOM: 엑셀에서 한글이 깨지지 않게
+  a.download = '폰프리청챌린지_완수자_' + new Date().toISOString().slice(0, 10) + '.csv'; a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+};
+
+/* ---------- 게시글 ---------- */
+function loadPosts(reset){
+  if (reset){ postOff = 0; $('posts').innerHTML = '<p class="empty" style="grid-column:1/-1">불러오는 중…</p>'; }
+  api('adminPosts', { offset: postOff }).then(function(r){
+    if (reset) $('posts').innerHTML = '';
+    if (!r.ok) return toast(r.error);
+    if (!r.items.length && !postOff){ $('posts').innerHTML = '<p class="empty" style="grid-column:1/-1">아직 공유된 글이 없습니다.</p>'; }
+    r.items.forEach(function(p){
+      var el = document.createElement('article'); el.className = 'post' + (p.share === '숨김' ? ' hid' : '');
+      el.innerHTML = (p.thumb ? '<img alt="">' : '') + '<div class="bd"><b>' + esc(p.nickname) + '</b> <small>' + esc(p.name) + ' · ' + esc(p.team) + ' · ' + md(p.date) + ' 기록</small>' + (p.note ? '<p></p>' : '') + '</div>' +
+        '<div class="ft"><span class="pill' + (p.share === '숨김' ? ' off' : '') + '">' + p.share + '</span><button class="btn sm ' + (p.share === '숨김' ? 'soft' : 'danger') + '">' + (p.share === '숨김' ? '다시 공개' : '숨기기') + '</button></div>';
+      if (p.thumb) el.querySelector('img').src = p.thumb;
+      if (p.note) el.querySelector('p').textContent = p.note;
+      el.querySelector('.ft button').onclick = function(){
+        var to = p.share === '숨김' ? '공유' : '숨김', btn = this;
+        btn.disabled = true;
+        api('adminSetShare', { id: p.id, share: to }).then(function(r){ btn.disabled = false; if (!r.ok) return toast(r.error);
+          p.share = to; el.className = 'post' + (to === '숨김' ? ' hid' : ''); el.querySelector('.pill').className = 'pill' + (to === '숨김' ? ' off' : ''); el.querySelector('.pill').textContent = to;
+          btn.className = 'btn sm ' + (to === '숨김' ? 'soft' : 'danger'); btn.textContent = to === '숨김' ? '다시 공개' : '숨기기'; toast(to === '숨김' ? '게시판에서 숨겼어요' : '다시 공개했어요'); });
+      };
+      $('posts').appendChild(el);
+    });
+    postOff += r.items.length; $('btnMore').hidden = !r.more;
+  });
+}
+$('btnMore').onclick = function(){ loadPosts(false); };
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && !$('modal').hidden) $('mNo').click(); });
+
+if (tok()) enter(); else { $('fLogin').hidden = false; $('pw').focus(); }
+})();
+</script>
+</body>
+</html>

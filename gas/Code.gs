@@ -205,7 +205,8 @@ function setup() {
    ['가입허용', '예', '아니오로 바꾸면 신규 가입을 막습니다.'],
    ['정지안내', '운영자 확인이 필요한 계정입니다. 담당자에게 문의해 주세요.', '정지된 계정이 로그인할 때 보이는 문구'],
    ['시작일', "'2026-11-23", '챌린지 첫날(이 날의 기록은 다음 날 입력)'],
-   ['종료일', "'2026-12-06", '챌린지 마지막 날(이 날의 기록은 다음 날까지 입력)']
+   ['종료일', "'2026-12-06", '챌린지 마지막 날(이 날의 기록은 다음 날까지 입력)'],
+   ['관리자비밀번호', 'CHANGE-ME', '관리자 페이지 비밀번호. 바꾸면 기존 관리자 로그인이 모두 풀립니다.']
   ].forEach(function (row) { if (have.indexOf(row[0]) < 0) s.appendRow(row); }); // 이미 쓰던 시트에 다시 실행해도 빠진 항목만 더한다
   var props = PropertiesService.getScriptProperties();
   if (!props.getProperty('TOKEN_SECRET')) props.setProperty('TOKEN_SECRET', Utilities.getUuid() + Utilities.getUuid());
@@ -298,3 +299,103 @@ function auth(t) {
 }
 function pub(row) { return { nickname: row[C['닉네임']], name: row[C['성명']], team: row[C['팀']], position: row[C['직위']], pledges: [row[C['다짐1']], row[C['다짐2']]].filter(String) }; }
 function suspendedMsg() { return settings()['정지안내'] || '운영자 확인이 필요한 계정입니다.'; }
+
+/* ===================== 관리자 =====================
+ * 관리자 비밀번호는 '설정' 탭의 '관리자비밀번호' 행에 둔다(없으면 첫 로그인 시도 때 CHANGE-ME로 행을 만든다).
+ * 로그인하면 비밀번호로 서명한 토큰을 주므로, 비밀번호를 바꾸면 그전 관리자 로그인은 모두 풀린다. */
+function adminPw() {
+  var s = settings();
+  if (!('관리자비밀번호' in s)) {
+    sheet(SHEET_S).appendRow(['관리자비밀번호', 'CHANGE-ME', '관리자 페이지 비밀번호. 바꾸면 기존 관리자 로그인이 모두 풀립니다.']);
+    CacheService.getScriptCache().remove('settings');
+    return 'CHANGE-ME';
+  }
+  return String(s['관리자비밀번호'] || '').trim();
+}
+function adminToken(pw) {
+  var secret = PropertiesService.getScriptProperties().getProperty('TOKEN_SECRET');
+  return 'A.' + hex(Utilities.computeHmacSha256Signature('admin|' + pw, secret)).slice(0, 40);
+}
+function adminOk(t) { var pw = adminPw(); return pw && pw !== 'CHANGE-ME' && t === adminToken(pw); }
+var DENY = { ok: false, code: 'ADMIN', error: '관리자 로그인이 필요합니다.' };
+
+ACTIONS.adminLogin = function (r) {
+  if (tooMany('admin')) return { ok: false, error: '시도가 많습니다. 5분 뒤에 다시 시도해 주세요.' };
+  var pw = adminPw();
+  if (pw === 'CHANGE-ME' || !pw) return { ok: false, error: '시트 설정 탭의 관리자비밀번호를 먼저 정해 주세요.' };
+  if (String(r.password || '') !== pw) { fail('admin'); Utilities.sleep(600); return { ok: false, error: '관리자 비밀번호가 맞지 않습니다.' }; }
+  return { ok: true, atoken: adminToken(pw) };
+};
+
+/* 한 번에 필요한 것을 모두: 참가자(기록 일수 포함), 요약, 팀 참여율 */
+ACTIONS.adminData = function (r) {
+  if (!adminOk(r.atoken)) return DENY;
+  var p = period(), yest = ymd(new Date(Date.now() - 864e5));
+  var users = sheet(SHEET_P).getDataRange().getValues(), rec = sheet(SHEET_R).getDataRange().getValues(), cnt = {}, last = {}, yCount = 0, shared = 0, hidden = 0;
+  for (var j = 1; j < rec.length; j++) {
+    var w = rec[j], uid = w[R['사용자ID']], d = String(w[R['기록일']]).replace(/^'/, '');
+    if (d >= p.start && d <= p.end) { cnt[uid] = (cnt[uid] || 0) + 1; if (!last[uid] || d > last[uid]) last[uid] = d; if (d === yest) yCount++; }
+    if (w[R['공유']] === '공유') shared++; else if (w[R['공유']] === '숨김') hidden++;
+  }
+  var list = [];
+  for (var i = 1; i < users.length; i++) {
+    var u = users[i]; if (!u[C.ID]) continue;
+    list.push({ id: u[C.ID], name: u[C['성명']], team: u[C['팀']], position: u[C['직위']], ext: String(u[C['내선']]).replace(/^'/, ''),
+      nickname: u[C['닉네임']], joined: u[C['가입시각']] ? ymd(new Date(u[C['가입시각']])) : '', status: u[C['상태']] || '정상',
+      days: cnt[u[C.ID]] || 0, last: last[u[C.ID]] || '', pledges: [u[C['다짐1']], u[C['다짐2']]].filter(String) });
+  }
+  var ts = teamStats();
+  return { ok: true, period: p, yesterday: yest, users: list, summary: { members: list.length, active: list.filter(function (x) { return x.status !== '정지'; }).length,
+    yesterday: yCount, records: rec.length - 1, completed: list.filter(function (x) { return x.days >= 10 && x.status !== '정지'; }).length, shared: shared, hidden: hidden }, teams: ts };
+};
+
+ACTIONS.adminSetStatus = function (r) {
+  if (!adminOk(r.atoken)) return DENY;
+  if (['정상', '정지'].indexOf(r.status) < 0) return { ok: false, error: '상태 값이 올바르지 않습니다.' };
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var f = findById(String(r.id || '')); if (!f) return { ok: false, error: '참가자를 찾을 수 없습니다.' };
+    sheet(SHEET_P).getRange(f.index, C['상태'] + 1).setValue(r.status);
+  } finally { lock.releaseLock(); }
+  CacheService.getScriptCache().remove('teams');
+  return { ok: true };
+};
+
+/* 비밀번호 초기화: 임시 비밀번호를 만들어 관리자에게만 보여 준다. 솔트가 바뀌어 그 사람의 기존 로그인은 풀린다. */
+ACTIONS.adminResetPw = function (r) {
+  if (!adminOk(r.atoken)) return DENY;
+  var chars = 'abcdefghjkmnpqrstuvwxyz23456789', temp = '';
+  for (var k = 0; k < 8; k++) temp += chars.charAt(Math.floor(Math.random() * chars.length));
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var f = findById(String(r.id || '')); if (!f) return { ok: false, error: '참가자를 찾을 수 없습니다.' };
+    var salt = Utilities.getUuid(), sh = sheet(SHEET_P);
+    sh.getRange(f.index, C['비밀번호해시'] + 1, 1, 2).setValues([[hashPw(temp, salt), salt]]);
+  } finally { lock.releaseLock(); }
+  return { ok: true, temp: temp };
+};
+
+/* 게시글 관리: 공유·숨김 글을 최근 순으로 20개씩 */
+ACTIONS.adminPosts = function (r) {
+  if (!adminOk(r.atoken)) return DENY;
+  var v = sheet(SHEET_R).getDataRange().getValues(), list = [];
+  for (var i = 1; i < v.length; i++) if (v[i][R['공유']] === '공유' || v[i][R['공유']] === '숨김') list.push({ i: i, t: +new Date(v[i][R['수정시각']] || v[i][R['저장시각']]) || 0 });
+  list.sort(function (x, y) { return y.t - x.t; });
+  var off = Math.max(0, parseInt(r.offset, 10) || 0), PAGE = 20;
+  return { ok: true, more: off + PAGE < list.length, items: list.slice(off, off + PAGE).map(function (o) {
+    var w = v[o.i];
+    return { id: w[R['기록ID']], name: w[R['성명']], nickname: w[R['닉네임']], team: w[R['팀']], date: String(w[R['기록일']]).replace(/^'/, ''),
+      note: w[R['한줄기록']], thumb: w[R['썸네일']] || '', share: w[R['공유']], at: o.t };
+  }) };
+};
+
+ACTIONS.adminSetShare = function (r) {
+  if (!adminOk(r.atoken)) return DENY;
+  if (['공유', '숨김'].indexOf(r.share) < 0) return { ok: false, error: '값이 올바르지 않습니다.' };
+  var lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    var f = findRecord(String(r.id || '')); if (!f) return { ok: false, error: '글을 찾을 수 없습니다.' };
+    sheet(SHEET_R).getRange(f.index, R['공유'] + 1).setValue(r.share);
+  } finally { lock.releaseLock(); }
+  return { ok: true };
+};

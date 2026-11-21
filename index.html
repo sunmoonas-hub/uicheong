@@ -94,6 +94,8 @@ h1,h2,h3{margin:0;font-weight:700}
 .facts dt{flex:none;width:36px;color:var(--sub)}
 .facts dd{margin:0;color:var(--ink);font-weight:500}
 .ground .foot{margin-top:18px}
+/* 운영자용 입구: 참가자에게는 눈에 덜 띄게 작은 글자 링크로 */
+.admin-link{display:block;width:max-content;margin:14px auto 0;padding:8px 12px;font-size:14px;color:var(--sub);text-decoration:underline;text-underline-offset:3px}
 .foot{text-align:center;font-size:13px;color:var(--sub);margin-top:20px;line-height:1.6}
 
 /* ---------- 가입: 한 화면에 한 단계 ---------- */
@@ -322,6 +324,7 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
       </dl>
       <button class="btn pri" data-go="login">로그인</button>
       <button class="btn sec" data-go="signup">회원가입</button>
+      <a class="admin-link" href="admin.html">관리자 로그인</a>
       <p class="foot">민원 응대, 매일 업무 등 업무상 필요한 사용은 예외입니다.<br>경기도의정부교육지원청</p>
     </div>
   </section>
