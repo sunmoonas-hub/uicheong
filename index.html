@@ -1033,7 +1033,7 @@ function loadRank(){
     }).join('');
     if (myIdx >= 0){
       var m = list[myIdx];
-      $('myTeam').innerHTML = '<small>우리 팀</small><b></b><div class="rate">' + m.rate + '<small>%</small></div><p>' + list.filter(function(t){ return t.members; }).length + '개 팀 중 ' + myRank + '위 · 가입 ' + m.members + '명 · 어제 ' + m.yesterday + '명 기록</p>';
+      $('myTeam').innerHTML = '<small>우리 팀</small><b></b><div class="rate">' + m.rate + '<small>%</small></div><p>' + (r.days ? list.filter(function(t){ return t.members; }).length + '개 팀 중 ' + myRank + '위 · 가입 ' + m.members + '명 · 어제 ' + m.yesterday + '명 기록' : '가입 ' + m.members + '명 · 순위는 첫 기록부터 매겨져요') + '</p>'; // 기록 시작 전에는 0%끼리의 순위가 의미 없다
       $('myTeam').querySelector('b').textContent = m.team;
     }
   });
