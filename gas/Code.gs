@@ -35,11 +35,11 @@ var ACTIONS = {
     if (!codeOk(r.code)) return { ok: false, field: 'code', error: '참여 코드가 맞지 않습니다. 메신저로 받은 코드를 확인해 주세요.' };
     var s = settings();
     if (String(s['가입허용'] || '예').trim() === '아니오') return { ok: false, error: '지금은 가입을 받지 않습니다.' };
-    var name = str(r.name, 20), team = str(r.team, 30), pos = str(r.position, 50), ext = String(r.ext || '').replace(/\D/g, '');
+    var name = str(r.name, 20), team = str(r.team, 30), pos = str(r.position, 30), ext = String(r.ext || '').replace(/\D/g, '');
     var nick = cleanNick(r.nickname), pw = String(r.password || ''), p1 = str(r.pledge1, 60), p2 = str(r.pledge2, 60);
     if (name.length < 2) return { ok: false, field: 'name', error: '성명을 입력해 주세요.' };
     if (!team) return { ok: false, field: 'team', error: '팀을 선택해 주세요.' };
-    if (!pos) return { ok: false, field: 'position', error: '직위·직종을 선택해 주세요.' };
+    if (!pos) return { ok: false, field: 'position', error: '직위·직종을 입력해 주세요.' };
     if (ext.length < 3 || ext.length > 5) return { ok: false, field: 'ext', error: '사무실 내선번호를 숫자 3~5자리로 입력해 주세요.' };
     var bad = nickError(nick); if (bad) return { ok: false, field: 'nickname', error: bad };
     if (pw.length < 6 || pw.length > 64) return { ok: false, field: 'password', error: '비밀번호는 6자 이상으로 정해 주세요.' };

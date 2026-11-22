@@ -892,7 +892,7 @@ body{background:linear-gradient(180deg,#FCF9F1 0%,#FAF5EA 50%,#F7F0E2 100%);back
         <p class="hint">직원 확인과 팀별 참여율 집계에만 씁니다. 다른 사람에게는 보이지 않습니다.</p>
         <div class="f"><label for="name">성명 <i>*</i></label><input class="in" id="name" maxlength="20" placeholder="예: 홍길동" autocomplete="name"><div class="msg" data-for="name"></div></div>
         <div class="f"><label for="team">팀 <i>*</i></label><select class="in" id="team"><option value="">팀을 선택하세요</option></select><div class="msg" data-for="team"></div></div>
-        <div class="f"><label for="position">직위·직종 <i>*</i></label><select class="in" id="position"><option value="">선택하세요</option></select><div class="msg" data-for="position"></div></div>
+        <div class="f"><label for="position">직위·직종 <i>*</i></label><input class="in" id="position" maxlength="30" autocomplete="off" placeholder="예: 주무관, 장학사, 교육공무직"><div class="msg" data-for="position"></div></div>
         <div class="f"><label for="ext">사무실 내선번호 <i>*</i></label><input class="in" id="ext" inputmode="numeric" maxlength="5" placeholder="숫자 3~5자리"><div class="msg" data-for="ext"></div></div>
       </div>
 
@@ -1304,7 +1304,7 @@ function fieldErr(id, v){
     case 'code': return v.code ? '' : '참여 코드를 입력해 주세요.';
     case 'name': return v.name.length >= 2 ? '' : '성명을 입력해 주세요.';
     case 'team': return v.team ? '' : '팀을 선택해 주세요.';
-    case 'position': return v.position ? '' : '직위·직종을 선택해 주세요.';
+    case 'position': return v.position ? '' : '직위·직종을 입력해 주세요.';
     case 'ext': return v.ext.length >= 3 && v.ext.length <= 5 ? '' : '내선번호를 숫자 3~5자리로 입력해 주세요.';
     case 'nickname': return nickLocalErr(v.nickname) || (nickOkFor !== v.nickname ? '닉네임 중복 확인을 눌러 주세요.' : '');
     case 'password': return v.password.length >= 6 ? '' : '비밀번호는 6자 이상으로 정해 주세요.';
@@ -1338,7 +1338,7 @@ function stepOf(field){ for (var i = 0; i < STEPS.length; i++) if (STEPS[i].inde
 $('sBack').onclick = function(){ history.back(); };
 function formData(){
   return {
-    code: $('code').value.trim(), name: $('name').value.trim(), team: $('team').value, position: $('position').value,
+    code: $('code').value.trim(), name: $('name').value.trim(), team: $('team').value, position: $('position').value.trim(),
     ext: $('ext').value.replace(/\D/g, ''), nickname: $('nickname').value.normalize('NFC').trim(), password: $('password').value,
     pledge1: $('pledge1').value.trim(), pledge2: $('pledge2').value.trim(), agree: $('agree').checked
   };
@@ -1347,7 +1347,7 @@ function formData(){
 /* ---------- 가입 ---------- */
 function fillOptions(){
   (CFG.TEAMS || []).forEach(function(t){ $('team').add(new Option(t, t)); });
-  (CFG.POSITIONS || []).forEach(function(t){ $('position').add(new Option(t, t)); });
+  // 직위·직종은 직접 입력(2026-11-22). 이미 가입한 사람이 목록에서 고른 값은 그대로 직위로 쓴다
   $('privacy').textContent = CFG.PRIVACY || '';
   ['퇴근 후 1시간은 폰 대신 책 읽기', '식사할 때는 폰 내려놓기', '자기 전 30분은 폰 없이', '출퇴근길엔 음악만, 영상은 쉬기', '점심시간엔 동료와 산책'].forEach(function(p){
     var c = document.createElement('button'); c.type = 'button'; c.className = 'chip'; c.textContent = '+ ' + p;
@@ -1360,6 +1360,7 @@ $('nickname').addEventListener('input', function(){ nickOkFor = ''; msg('nicknam
 $('password').addEventListener('input', checkPw);
 $('password2').addEventListener('input', checkPw);
 ['code','name','team','position','ext','pledge1','agree'].forEach(function(id){ $(id).addEventListener('change', function(){ msg(id, ''); }); });
+$('position').addEventListener('input', function(){ msg('position', ''); });
 
 $('btnNick').onclick = function(){
   var n = $('nickname').value.normalize('NFC').trim(), e = nickLocalErr(n), btn = this;
