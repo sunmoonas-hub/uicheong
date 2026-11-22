@@ -667,6 +667,69 @@ body{background:radial-gradient(120% 60% at 50% -10%,color-mix(in srgb,var(--bra
 .noti.new{box-shadow:var(--sh-2),0 0 0 1.5px var(--brand)}
 .btn.danger{box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 2px rgba(23,50,77,.06)}
 
+/* ===== 참고 이미지(2026-11-22) 맞춤: 두께가 있는 흰 판, 짙은 청록 글자, 광택 있는 초록 버튼 =====
+   - 카드는 아래쪽에 얇은 두께(밝은 회색 띠)가 보이는 판처럼: 테두리 1px + 4px 두께 + 넓게 퍼진 그림자
+   - 글자는 남색 대신 짙은 청록(의청 초록과 한 계열)
+   - 기록판: 앞으로 올 날은 볼록한 흰 단추, 지나간(놓친) 날은 오목한 회색 홈, 기록한 날은 초록 구슬 */
+:root{
+  --bg:#F4F3EF; --fill:#EFEEEA; --line:#E7E5DF;
+  --ink:#173F3B; --ink2:#3E5A57; --sub:#8C9693;
+  --slab:#E9E7E1;
+  --sh-2:0 0 0 1px rgba(23,63,59,.04),0 4px 0 var(--slab),0 18px 30px -14px rgba(23,63,59,.22);
+  --sh-3:0 0 0 1px rgba(23,63,59,.04),0 5px 0 var(--slab),0 24px 40px -16px rgba(23,63,59,.26);
+  --sh-1:0 0 0 1px rgba(23,63,59,.05),0 3px 0 var(--slab),0 8px 14px -6px rgba(23,63,59,.22);
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#11161B; --fill:#232B33; --line:#2E3842; --ink:#EEF2F6; --ink2:#C3CCD5; --sub:#8D97A2; --slab:#0B0F13;
+    --sh-1:0 0 0 1px rgba(255,255,255,.04),0 3px 0 var(--slab),0 8px 14px -6px rgba(0,0,0,.6);
+    --sh-2:0 0 0 1px rgba(255,255,255,.04),0 4px 0 var(--slab),0 18px 30px -14px rgba(0,0,0,.7);
+    --sh-3:0 0 0 1px rgba(255,255,255,.05),0 5px 0 var(--slab),0 24px 40px -16px rgba(0,0,0,.75); }
+}
+body{background:linear-gradient(180deg,#F7F6F2 0%,var(--bg) 40%,#EEEDE8 100%);background-attachment:fixed}
+@media (prefers-color-scheme:dark){body{background:var(--bg)}}
+.card,.garden{border-radius:24px}
+.card{margin:16px 0}
+.garden{background:var(--surface);margin-top:10px;padding:24px 22px 22px}
+.garden h2{font-size:27px;color:var(--ink)}
+.tag{font-size:15px}
+.op-mode{background:var(--ink);font-size:13px;font-weight:700;padding:3px 11px;vertical-align:4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)}
+/* 종: 볼록한 흰 원판 */
+.bell{width:48px;height:48px;background:var(--surface);box-shadow:var(--sh-1),inset 0 1px 0 #fff}
+.bell svg{stroke:var(--ink)}
+/* D-day: 크림색 두꺼운 칩, 금빛 숫자 */
+.dday{background:linear-gradient(180deg,#FAF6EA,#F1EBDB);border-radius:16px;padding:8px 16px 9px;text-align:center;box-shadow:0 0 0 1px rgba(23,63,59,.05),0 4px 0 #E3DCC9,0 10px 16px -8px rgba(23,63,59,.25),inset 0 1px 0 #fff}
+.dday small{color:var(--sub);font-size:12px}
+.dday strong{color:#D49A1C;font-size:22px;font-weight:800;letter-spacing:.02em}
+@media (prefers-color-scheme:dark){.dday{background:linear-gradient(180deg,#2E2A20,#26221A);box-shadow:0 4px 0 #15130E,0 10px 16px -8px rgba(0,0,0,.6)}}
+/* 새싹 숫자: 짙은 청록 하나로 크게 */
+.growth b{background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--ink);font-size:64px}
+.growth b small{-webkit-text-fill-color:currentColor;color:var(--ink);font-size:24px;font-weight:800;margin-left:6px}
+.growth p{color:var(--ink2);font-size:15px;font-weight:500}
+#dText{color:var(--ink2);font-weight:500;border-top-color:var(--line)}
+.pot svg{filter:drop-shadow(0 6px 6px rgba(23,63,59,.12))}
+/* 기록하기 버튼: 광택 있는 초록 판. 윗면 하이라이트, 아래쪽 짙은 두께, 가운데 아래 빛 번짐 */
+.btn.pri{position:relative;overflow:hidden;border-radius:20px;background:linear-gradient(180deg,#2BB386 0%,#17956C 48%,#0F7A58 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -3px 0 rgba(0,0,0,.14),0 5px 0 #0B5E44,0 16px 26px -10px rgba(15,122,88,.65);text-shadow:0 1px 2px rgba(0,0,0,.2)}
+.btn.pri::before{content:'';position:absolute;left:6%;right:6%;top:2px;height:46%;border-radius:18px 18px 40% 40%/18px 18px 14px 14px;background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0));pointer-events:none}
+.btn.pri::after{content:'';position:absolute;left:30%;right:30%;bottom:-6px;height:16px;border-radius:50%;background:radial-gradient(closest-side,rgba(190,255,225,.55),transparent);pointer-events:none}
+.btn.pri:active{transform:translateY(4px);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),inset 0 -2px 0 rgba(0,0,0,.12),0 1px 0 #0B5E44,0 6px 12px -6px rgba(15,122,88,.6)}
+.recbtn{min-height:64px;font-size:19px;margin-top:16px}
+/* 기록판 */
+.stamps{gap:10px;margin-top:20px}
+.stamp{background:var(--fill);color:#B3B9B7;box-shadow:inset 0 2px 4px rgba(23,63,59,.10),inset 0 -1px 0 rgba(255,255,255,.9)}
+.stamp b{color:#AEB5B3;font-size:16px;font-weight:700}
+.stamp.future{opacity:1;background:var(--surface);color:var(--ink2);box-shadow:0 0 0 1px rgba(23,63,59,.05),0 3px 0 var(--slab),0 6px 10px -4px rgba(23,63,59,.22),inset 0 1px 0 #fff}
+.stamp.future b{color:var(--ink)}
+.stamp.done b{color:#fff}
+@media (prefers-color-scheme:dark){.stamp{color:#5C6670}.stamp b{color:#6B7580}.stamp.future{background:var(--surface)}}
+.prog h3{font-size:21px}
+.yest{border-top-color:var(--line)}
+.yest strong{font-size:27px;color:var(--ink)}
+.btn:disabled{text-shadow:none}.btn:disabled::before,.btn:disabled::after{display:none}
+.btn.pri:disabled{box-shadow:var(--sh-2)!important}
+.pot{grid-template-columns:116px 1fr;gap:14px}.pot svg{width:116px;height:132px}
+.growth p{font-size:14px;letter-spacing:-.02em}
+
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:rgba(25,31,40,.92);color:#fff;padding:12px 20px;border-radius:999px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s,transform .3s var(--ease);max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:10;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .toast.on{opacity:1;transform:translateX(-50%)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
