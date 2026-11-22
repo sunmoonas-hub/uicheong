@@ -765,6 +765,32 @@ body{background:linear-gradient(180deg,#FCF9F1 0%,#FAF5EA 50%,#F7F0E2 100%);back
 .dday strong{color:var(--orange)}
 @media (prefers-color-scheme:dark){.dday{background:linear-gradient(180deg,#3A2B1C,#2E2216);box-shadow:0 3px 0 #1A130C,0 10px 16px -8px rgba(0,0,0,.6)}.dday small{color:#E0A468}}
 
+/* ===== 첫 화면(참고 이미지): 크림 바탕 아래 옅은 초록 언덕, 두께 있는 안내 판, 광택 알약 버튼 + ›  ===== */
+#s-welcome{position:relative;isolation:isolate}
+#s-welcome::after{content:'';position:absolute;left:-20px;right:-20px;bottom:0;height:240px;z-index:-1;pointer-events:none;
+  background:radial-gradient(120% 100% at 50% 100%,color-mix(in srgb,var(--brand-soft) 95%,transparent) 0%,color-mix(in srgb,var(--brand-soft) 55%,transparent) 45%,transparent 75%)}
+.title{font-size:clamp(38px,11.2vw,50px);color:var(--ink);text-shadow:0 2px 0 rgba(255,255,255,.8),0 6px 14px rgba(23,50,77,.10)}
+.title em{color:var(--poster)}
+.hero .kicker{font-size:17px;font-weight:800;margin-bottom:10px}
+.lead{font-size:18px;font-weight:600;color:var(--ink);line-height:1.65;max-width:12em}
+.lead b{font-weight:900}
+.mascot{filter:drop-shadow(0 16px 16px rgba(23,50,77,.18))}
+.facts{border-radius:22px;padding:6px 22px;position:relative;z-index:1}
+.facts div{border-top-color:color-mix(in srgb,var(--line) 70%,transparent);padding:15px 0}
+.facts dt{width:44px;font-size:15px}
+.facts dd{font-weight:700;font-size:16px}
+/* 버튼: 둥근 알약, 로그인은 광택 초록, 회원가입은 민트빛 볼록 판. 글자 뒤에 › */
+#s-welcome .btn{border-radius:22px;min-height:62px;font-size:19px;font-weight:800}
+#s-welcome .btn.pri,#s-welcome .btn.sec{gap:8px}
+#s-welcome .btn.pri::after,#s-welcome .btn.sec::after{content:'';position:static;width:9px;height:9px;border:solid currentColor;border-width:2.5px 2.5px 0 0;transform:rotate(45deg);margin-left:2px;background:none;border-radius:1px}
+#s-welcome .btn.pri::after{left:auto;right:auto;bottom:auto;height:9px}
+#s-welcome .btn.sec{margin-top:14px;color:var(--brand-ink);background:linear-gradient(180deg,#F3FBF6 0%,#E1F3E9 100%);
+  box-shadow:0 0 0 1px rgba(18,122,96,.10),inset 0 1px 0 #fff,0 4px 0 #CFE8DA,0 14px 24px -12px rgba(18,122,96,.35)}
+#s-welcome .btn.sec:active{transform:translateY(3px);box-shadow:0 0 0 1px rgba(18,122,96,.12),inset 0 1px 0 #fff,0 1px 0 #CFE8DA}
+@media (prefers-color-scheme:dark){#s-welcome .btn.sec{background:linear-gradient(180deg,#1C3A30,#16302A);box-shadow:0 4px 0 #0B1A15,0 14px 24px -12px rgba(0,0,0,.6)}}
+.admin-link{margin-top:18px;font-size:15px;color:var(--ink2)}
+.ground .foot{color:var(--ink2);position:relative}
+
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:rgba(25,31,40,.92);color:#fff;padding:12px 20px;border-radius:999px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s,transform .3s var(--ease);max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:10;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .toast.on{opacity:1;transform:translateX(-50%)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
