@@ -759,6 +759,11 @@ body{background:linear-gradient(180deg,#FCF9F1 0%,#FAF5EA 50%,#F7F0E2 100%);back
 .prac small{font-weight:400;margin-top:3px}
 .prac .pi{width:44px;height:44px;border-radius:14px;font-size:20px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),0 3px 6px -2px rgba(23,50,77,.18)}
 .except{margin-top:14px}
+/* D-day: 주황 숫자 + 살구빛 칩(첫 번째 참고 이미지) */
+.dday{background:linear-gradient(180deg,#FFF4E6,#FDE6CC);box-shadow:0 0 0 1px rgba(240,138,36,.10),0 3px 0 #F6D3AE,0 10px 16px -8px rgba(240,138,36,.35),inset 0 1px 0 rgba(255,255,255,.8)}
+.dday small{color:#B46A1E}
+.dday strong{color:var(--orange)}
+@media (prefers-color-scheme:dark){.dday{background:linear-gradient(180deg,#3A2B1C,#2E2216);box-shadow:0 3px 0 #1A130C,0 10px 16px -8px rgba(0,0,0,.6)}.dday small{color:#E0A468}}
 
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:rgba(25,31,40,.92);color:#fff;padding:12px 20px;border-radius:999px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s,transform .3s var(--ease);max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:10;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .toast.on{opacity:1;transform:translateX(-50%)}
