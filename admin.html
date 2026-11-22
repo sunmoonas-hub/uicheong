@@ -178,6 +178,19 @@ td{color:var(--ink)}
 .meter i::after{background:linear-gradient(180deg,#2A9C70,#187553)}
 .post img{border-radius:0}
 .nlist .n{border-bottom-color:color-mix(in srgb,var(--line) 70%,transparent)}
+/* 알림 목록: 게시판 표 */
+.ntab{width:100%;border-collapse:collapse}
+.ntab th{font-size:13px;padding:10px 12px;border-bottom:1.5px solid var(--ink);color:var(--ink2);text-align:left}
+.ntab td{padding:16px 12px;border-bottom:1px solid var(--line);font-size:15px;vertical-align:top}
+.ntab .no{width:64px;text-align:center;color:var(--ink2)}
+.ntab .who{width:110px;text-align:center;color:var(--ink2)}
+.ntab .dt{width:110px;text-align:center;color:var(--ink2)}
+.ntab .act{width:70px;text-align:right}
+.ntab th.who,.ntab th.dt,.ntab th.no{text-align:center}
+.ntab .tt b{font-weight:600}
+.ntab .tt .sub{display:block;font-size:13px;color:var(--sub);margin-top:3px;white-space:pre-wrap}
+.ntab tbody tr:hover td{background:color-mix(in srgb,var(--brand-soft) 45%,transparent)}
+@media (max-width:640px){.ntab .who{display:none}.ntab .no{width:40px}.ntab .dt{width:86px;font-size:13px}.ntab td,.ntab th{padding-left:6px;padding-right:6px}}
 </style>
 </head>
 <body>
@@ -420,12 +433,17 @@ $('btnMore').onclick = function(){ loadPosts(false); };
 /* ---------- 알림: 보내기와 보낸 알림 목록 ---------- */
 $('wBody').addEventListener('input', function(){ $('wCnt').textContent = this.value.length; $('wErr').textContent = ''; });
 $('wTitle').addEventListener('input', function(){ $('wErr').textContent = ''; });
+function ymdDot(t){ if (!t) return ''; var d = new Date(t); return d.getFullYear() + '.' + ('0' + (d.getMonth() + 1)).slice(-2) + '.' + ('0' + d.getDate()).slice(-2); }
 function when(t){ if (!t) return ''; var d = new Date(t); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
 function loadNoti(){
   $('nList').innerHTML = '<p class="empty">불러오는 중…</p>';
   api('notifications').then(function(r){
     if (!r.ok){ $('nList').innerHTML = '<p class="empty">' + esc(r.error) + '</p>'; return; }
-    $('nList').innerHTML = r.items.length ? r.items.map(function(n){ return '<div class="n"><div class="nt"><b>' + esc(n.title) + '</b>' + (/^N\d+$/.test(n.id) ? '<button class="btn sm danger" data-nid="' + esc(n.id) + '">삭제</button>' : '') + '</div>' + (n.body ? '<p>' + esc(n.body) + '</p>' : '') + '<small>' + when(n.at) + ' · ' + esc(n.from) + '</small></div>'; }).join('') : '<p class="empty">아직 보낸 알림이 없습니다.</p>';
+    // 게시판 목록처럼: 번호(최신이 가장 큰 번호) · 제목(내용은 아래 회색 줄) · 보낸이 · 날짜, 최신순
+    var list = r.items.slice().sort(function(a, b){ return b.at - a.at; }), total = list.length;
+    $('nList').innerHTML = total ? '<table class="ntab"><thead><tr><th class="no">번호</th><th>제목</th><th class="who">보낸이</th><th class="dt">날짜</th><th class="act"></th></tr></thead><tbody>' + list.map(function(n, i){
+      return '<tr class="n"><td class="no tnum">' + (total - i) + '</td><td class="tt"><b>' + esc(n.title) + '</b>' + (n.body ? '<span class="sub">' + esc(n.body) + '</span>' : '') + '</td><td class="who">' + esc(n.from) + '</td><td class="dt tnum">' + ymdDot(n.at) + '</td><td class="act">' + (/^N\d+$/.test(n.id) ? '<button class="btn sm danger" data-nid="' + esc(n.id) + '">삭제</button>' : '') + '</td></tr>';
+    }).join('') + '</tbody></table>' : '<p class="empty">아직 보낸 알림이 없습니다.</p>';
   });
 }
 $('nList').addEventListener('click', function(e){
@@ -433,7 +451,7 @@ $('nList').addEventListener('click', function(e){
   var row = b.closest('.n'), title = row.querySelector('b').textContent;
   ask('알림을 삭제할까요?', title + '\n참가자 알림 목록에서도 바로 사라집니다. 되돌릴 수 없습니다.', '삭제', true).then(function(yes){
     if (!yes) return; b.disabled = true;
-    api('adminDeleteAlert', { id: b.dataset.nid }).then(function(r){ b.disabled = false; if (!r.ok) return toast(r.error); row.remove(); if (!$('nList').children.length) $('nList').innerHTML = '<p class="empty">아직 보낸 알림이 없습니다.</p>'; toast('알림을 삭제했어요'); });
+    api('adminDeleteAlert', { id: b.dataset.nid }).then(function(r){ b.disabled = false; if (!r.ok) return toast(r.error); row.remove(); if (!$('nList').querySelector('tbody tr')) $('nList').innerHTML = '<p class="empty">아직 보낸 알림이 없습니다.</p>'; toast('알림을 삭제했어요'); });
   });
 });
 $('fWrite').addEventListener('submit', function(e){
