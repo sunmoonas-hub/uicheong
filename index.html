@@ -571,6 +571,57 @@ textarea.in{height:auto;min-height:96px;padding:14px 16px;resize:none;line-heigh
 .st.now{border-color:var(--orange);background:var(--t-peach)}
 .s3btn{display:inline-flex;margin-top:6px;min-height:32px;padding:0 10px;font-size:12px;background:var(--orange);color:#fff;border-radius:10px;text-decoration:none}
 
+/* ===== 입체감: 색은 그대로, 빛(위)과 그림자(아래)로 면을 띄운다 =====
+   - 그림자는 남색(--ink) 기운을 섞은 두 겹: 가까운 얇은 그림자 + 멀리 퍼지는 부드러운 그림자
+   - 누르는 것(버튼·종)은 위쪽 하이라이트로 볼록하게, 누르면 살짝 내려앉는다
+   - 앞으로 올 날은 오목하게(눌린 홈), 기록한 날은 볼록한 초록 구슬로 */
+:root{
+  --sh-1:0 1px 2px rgba(23,50,77,.05),0 2px 6px rgba(23,50,77,.04);
+  --sh-2:0 1px 2px rgba(23,50,77,.05),0 10px 28px -10px rgba(23,50,77,.16);
+  --sh-3:0 2px 4px rgba(23,50,77,.06),0 22px 44px -18px rgba(23,50,77,.24);
+  --hl:inset 0 1px 0 rgba(255,255,255,.9);
+}
+@media (prefers-color-scheme:dark){
+  :root{ --sh-1:0 1px 2px rgba(0,0,0,.35); --sh-2:0 1px 2px rgba(0,0,0,.3),0 12px 28px -10px rgba(0,0,0,.55); --sh-3:0 2px 4px rgba(0,0,0,.35),0 22px 44px -18px rgba(0,0,0,.7); --hl:inset 0 1px 0 rgba(255,255,255,.06); }
+}
+body{background:radial-gradient(120% 60% at 50% -10%,color-mix(in srgb,var(--brand-soft) 70%,transparent),transparent 60%),var(--bg);background-attachment:fixed}
+.card,.st,.kpi,.noti{border-color:transparent;box-shadow:var(--sh-2),var(--hl)}
+/* 맨 위 정원 카드: 가장 높이 떠 있는 면. 아래로 갈수록 옅은 초록 땅빛, 화분 뒤에 은은한 햇살 */
+.garden{position:relative;overflow:hidden;box-shadow:var(--sh-3),var(--hl);
+  background:radial-gradient(60% 55% at 22% 62%,color-mix(in srgb,var(--sun) 16%,transparent),transparent 70%),linear-gradient(180deg,var(--surface) 0%,var(--surface) 45%,color-mix(in srgb,var(--brand-soft) 75%,var(--surface)) 100%)}
+.garden h2{font-size:26px}
+.pot svg{filter:drop-shadow(0 10px 10px rgba(23,50,77,.10))}
+.growth b{background:linear-gradient(180deg,var(--ink) 30%,color-mix(in srgb,var(--ink) 70%,var(--brand)) 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.growth b small{-webkit-text-fill-color:var(--sub)}
+#dText{border-top-color:color-mix(in srgb,var(--line) 70%,transparent)}
+/* 종·D-day: 정원 위에 놓인 작은 돌 */
+.bell{border:0;background:linear-gradient(180deg,var(--surface),var(--fill));box-shadow:var(--sh-1),var(--hl),0 0 0 1px color-mix(in srgb,var(--line) 70%,transparent);transition:transform .12s var(--ease)}
+.bell:active{transform:translateY(1px) scale(.96)}
+.dday{background:linear-gradient(180deg,#FFF4E6,#FDE6CC);box-shadow:var(--sh-1),inset 0 1px 0 rgba(255,255,255,.8);padding:7px 14px}
+.dday small{color:#B46A1E}
+@media (prefers-color-scheme:dark){.dday{background:linear-gradient(180deg,#3A2B1C,#2E2216)}.dday small{color:#E0A468}}
+/* 주 버튼: 위는 밝고 아래는 짙은 볼록한 판 + 초록빛 그림자. 누르면 내려앉는다 */
+.btn.pri{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 82%,#fff) 0%,var(--brand) 55%,var(--brand-press) 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),inset 0 -2px 0 rgba(0,0,0,.12),0 2px 4px color-mix(in srgb,var(--brand) 30%,transparent),0 12px 24px -10px color-mix(in srgb,var(--brand) 70%,transparent);
+  text-shadow:0 1px 1px rgba(0,0,0,.15);transition:transform .12s var(--ease),box-shadow .12s}
+.btn.pri:active{background:linear-gradient(180deg,var(--brand-press),var(--brand));transform:translateY(2px);box-shadow:inset 0 2px 4px rgba(0,0,0,.18),0 2px 6px -2px color-mix(in srgb,var(--brand) 60%,transparent)}
+.btn.sec{box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 1px 2px rgba(23,50,77,.06)}
+.recbtn{min-height:60px;font-size:18px;font-weight:700}
+/* 14일 기록판: 앞으로 올 날은 오목한 홈, 기록한 날은 볼록한 초록 구슬, 기록할 날은 떠오른 단추 */
+.stamp{border:0;background:var(--fill);box-shadow:inset 0 2px 3px rgba(23,50,77,.08),inset 0 -1px 0 rgba(255,255,255,.8)}
+.stamp.future{opacity:.55}
+.stamp.done{background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--brand) 55%,#fff) 0%,var(--brand) 55%,var(--brand-press) 100%);box-shadow:0 3px 6px -1px color-mix(in srgb,var(--brand) 55%,transparent),inset 0 -2px 2px rgba(0,0,0,.12),inset 0 1px 1px rgba(255,255,255,.35)}
+.stamp.target{background:var(--surface);box-shadow:0 0 0 2px var(--brand),0 6px 12px -4px color-mix(in srgb,var(--brand) 55%,transparent);transform:translateY(-2px)}
+.stamp.target.done{background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--brand) 55%,#fff) 0%,var(--brand) 55%,var(--brand-press) 100%)}
+@media (prefers-color-scheme:dark){.stamp{box-shadow:inset 0 2px 4px rgba(0,0,0,.4),inset 0 -1px 0 rgba(255,255,255,.04)}}
+.yest strong{font-size:26px;letter-spacing:-.03em}
+/* ①②③ 단계 칸과 실천 아이콘도 살짝 띄운다 */
+.st i{box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 3px 6px -2px rgba(23,50,77,.35)}
+.st.now{box-shadow:var(--sh-2),0 0 0 1.5px var(--orange)}
+.st.done{box-shadow:var(--sh-2),0 0 0 1.5px var(--brand)}
+.prac .pi{box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 2px 4px -1px rgba(23,50,77,.12)}
+.tabbar{box-shadow:0 -8px 24px -12px rgba(23,50,77,.18);border-top-color:transparent}
+
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:rgba(25,31,40,.92);color:#fff;padding:12px 20px;border-radius:999px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s,transform .3s var(--ease);max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:10;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .toast.on{opacity:1;transform:translateX(-50%)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -1432,7 +1483,12 @@ function sprout(n, animate){
       s += '<circle cx="75" cy="' + (top - 6) + '" r="6.5" fill="#FFF1C9"/></g>';
     }
   } else s += '<ellipse cx="75" cy="127" rx="8" ry="5" fill="#C9A26B"/><path d="M75 123 q2 -6 6 -7" stroke="#8FD16A" stroke-width="3" fill="none" stroke-linecap="round"/>';
-  s += '<rect x="33" y="126" width="84" height="13" rx="5" style="fill:var(--pot-rim)"/><path d="M39 139 H111 L103 168 H47 Z" style="fill:var(--pot)"/>';
+  // 화분: 왼쪽 위에서 빛이 드는 것처럼 면마다 그라데이션, 바닥에 그림자를 깔아 땅에 놓인 느낌
+  var d = '<defs><linearGradient id="potB" x1="0" x2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".55"/><stop offset=".45" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="1" stop-color="#17324D" stop-opacity=".14"/></linearGradient>' +
+    '<linearGradient id="potR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".7"/><stop offset="1" stop-color="#17324D" stop-opacity=".08"/></linearGradient></defs>';
+  s = d + '<ellipse cx="75" cy="169" rx="34" ry="4" fill="#17324D" opacity=".10"/>' + s;
+  s += '<rect x="33" y="126" width="84" height="13" rx="5" style="fill:var(--pot-rim)"/><rect x="33" y="126" width="84" height="13" rx="5" fill="url(#potR)"/>' +
+       '<path d="M39 139 H111 L103 168 H47 Z" style="fill:var(--pot)"/><path d="M39 139 H111 L103 168 H47 Z" fill="url(#potB)"/><rect x="39" y="139" width="72" height="3" fill="#17324D" opacity=".07"/>';
   return s;
 }
 function blocked(m){ drop(SKEY); $('blockedMsg').textContent = m || '운영자 확인이 필요한 계정입니다.'; show('blocked'); }
