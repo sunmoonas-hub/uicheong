@@ -622,6 +622,51 @@ body{background:radial-gradient(120% 60% at 50% -10%,color-mix(in srgb,var(--bra
 .prac .pi{box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 2px 4px -1px rgba(23,50,77,.12)}
 .tabbar{box-shadow:0 -8px 24px -12px rgba(23,50,77,.18);border-top-color:transparent}
 
+/* ===== 입체감(나머지 화면): 홈과 같은 규칙 — 면은 그림자로 띄우고, 고르는 칸은 볼록, 입력칸은 오목 ===== */
+/* 입력칸: 살짝 파인 홈. 누르면(포커스) 초록 테두리와 함께 평평하게 올라온다 */
+.in,.card .in,.time .in,#fSignup .in{border:0;background:var(--fill);box-shadow:inset 0 2px 4px rgba(23,50,77,.07),inset 0 -1px 0 rgba(255,255,255,.7)}
+.in:focus,.card .in:focus,.time .in:focus,#fSignup .in:focus{background:var(--surface);box-shadow:0 0 0 2px var(--brand),0 6px 14px -6px color-mix(in srgb,var(--brand) 45%,transparent)}
+.in.bad{box-shadow:0 0 0 2px var(--red)}
+@media (prefers-color-scheme:dark){.in,.card .in,.time .in,#fSignup .in{box-shadow:inset 0 2px 4px rgba(0,0,0,.4),inset 0 -1px 0 rgba(255,255,255,.03)}}
+/* 고르는 칸(실천·채운 활동·동의): 떠 있는 판. 고르면 초록 판으로 바뀌며 조금 더 떠오른다 */
+.check,.tile,#fRecord .agree,.agree,.share-tg{border-color:transparent;box-shadow:var(--sh-1),var(--hl),0 0 0 1px color-mix(in srgb,var(--line) 75%,transparent);transition:background-color .15s,transform .12s var(--ease),box-shadow .15s}
+.check.on,.tile.on{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 85%,#fff),var(--brand) 60%,var(--brand-press))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 8px 18px -8px color-mix(in srgb,var(--brand) 75%,transparent);transform:translateY(-1px)}
+.tile.none.on{background:var(--ink2)!important;box-shadow:0 8px 18px -8px rgba(23,50,77,.5)}
+.share-tg:has(input:checked){box-shadow:var(--sh-1),0 0 0 1.5px var(--brand)}
+.check .box,.agree input,.share-tg input{box-shadow:inset 0 1px 2px rgba(23,50,77,.12)}
+.check .ico,.prac .pi{box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 2px 4px -1px rgba(23,50,77,.12)}
+.tile .pic{box-shadow:0 6px 12px -6px rgba(23,50,77,.35)}
+.howto{border-style:solid;border-width:0;background:linear-gradient(180deg,color-mix(in srgb,var(--brand-soft) 60%,#fff),var(--brand-soft));box-shadow:inset 0 1px 0 rgba(255,255,255,.8),0 0 0 1px color-mix(in srgb,var(--brand) 30%,transparent),0 4px 10px -6px color-mix(in srgb,var(--brand) 50%,transparent)}
+/* 사진 칸: 비어 있으면 오목, 사진은 떠 있게 */
+.padd,.photo-add{box-shadow:inset 0 2px 5px rgba(23,50,77,.08)}
+.ptile{box-shadow:0 6px 14px -8px rgba(23,50,77,.4)}
+/* 탭(세그먼트): 바깥은 오목한 홈, 고른 탭은 볼록한 알약 */
+.seg,.ht-seg{border:0;background:var(--fill);box-shadow:inset 0 2px 4px rgba(23,50,77,.08)}
+.seg button[aria-selected="true"],.ht-seg button[aria-selected="true"]{background:var(--surface);box-shadow:var(--sh-1),var(--hl)}
+/* 게시판: 화면 폭 전체 띠도 바탕 위로 살짝 띄운다 */
+#feed{border-top:0;box-shadow:0 -1px 0 color-mix(in srgb,var(--line) 70%,transparent),0 10px 28px -14px rgba(23,50,77,.2)}
+.post-h .ava,.ava-big{box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 3px 8px -3px rgba(23,50,77,.3)}
+.post-photo{box-shadow:0 8px 20px -12px rgba(23,50,77,.45)}
+.post-del{border-color:transparent;box-shadow:var(--sh-1),0 0 0 1px color-mix(in srgb,var(--line) 75%,transparent)}
+/* 통계: 우리 팀 카드는 볼록한 초록 판, 달력은 기록판과 같은 구슬·홈 */
+.my-team{background:linear-gradient(160deg,color-mix(in srgb,var(--brand) 80%,#fff) 0%,var(--brand) 45%,var(--brand-press) 100%);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 16px 32px -14px color-mix(in srgb,var(--brand) 80%,transparent)}
+.cal .d{border:0;background:var(--fill);box-shadow:inset 0 2px 3px rgba(23,50,77,.08),inset 0 -1px 0 rgba(255,255,255,.8)}
+.cal .d.on{background:radial-gradient(circle at 35% 28%,color-mix(in srgb,var(--brand) 55%,#fff) 0%,var(--brand) 55%,var(--brand-press) 100%);box-shadow:0 3px 6px -1px color-mix(in srgb,var(--brand) 55%,transparent),inset 0 -2px 2px rgba(0,0,0,.12)}
+.cal .d.tg{box-shadow:0 0 0 2px var(--brand),0 6px 12px -4px color-mix(in srgb,var(--brand) 55%,transparent)}
+.ranks .track,.hbar .tr{box-shadow:inset 0 1px 2px rgba(23,50,77,.12)}
+.ranks .track i,.hbar .tr i{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 75%,#fff),var(--brand))}
+.ranks li.mine{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--brand) 30%,transparent)}
+.ubars button i{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 70%,#fff),var(--brand));box-shadow:0 2px 4px -2px color-mix(in srgb,var(--brand) 60%,transparent)}
+/* 첫 화면·가입: 안내 칸과 선택 칩도 띄운다 */
+.facts,.privacy,.chip,.demo,.astat,.urow{box-shadow:var(--sh-2),var(--hl)}
+.mascot{filter:drop-shadow(0 14px 14px rgba(23,50,77,.16))}
+.steps{box-shadow:inset 0 1px 2px rgba(23,50,77,.12)}
+.steps i{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 75%,#fff),var(--brand))}
+/* 확인 창·알림 */
+.sheet{box-shadow:0 24px 60px -20px rgba(0,0,0,.45),var(--hl)}
+.noti.new{box-shadow:var(--sh-2),0 0 0 1.5px var(--brand)}
+.btn.danger{box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 2px rgba(23,50,77,.06)}
+
 .toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(12px);background:rgba(25,31,40,.92);color:#fff;padding:12px 20px;border-radius:999px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .2s,transform .3s var(--ease);max-width:calc(100vw - 40px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;z-index:10;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 .toast.on{opacity:1;transform:translateX(-50%)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
